@@ -60,6 +60,57 @@ app.get("/wait", (request, response) => { setTimeout(() => {
         });
         }, 5000)
         })
+
+app.post("/demosql", (request, response) => {
+    if (isStringProvided(request.body.name) && isStringProvided(request.body.message)) {
+    const theQuery = "INSERT INTO DEMO(Name, Message) VALUES ($1, $2) RETURNING *" 
+    const values = [request.body.name, request.body.message]
+    pool.query(theQuery, values).then(result => { 
+        response.send({ success: true,
+                        message: "Inserted: " + result.rows[0].name })
+    })
+    .catch(err => {
+        //log the error
+        console.log(err)
+        if (err.constraint == "demo_name_key") {
+            response.status(400).send({ message: "Name exists"
+            })
+        } else {
+            response.status(400).send({ message: err.detail
+            }) 
+        }
+        }) 
+    } else {
+        response.status(400).send({
+        message: "Missing required information" })
+    } 
+})
+
+app.get("/demosql", (request, response) => {
+    const theQuery = 'SELECT name, message FROM Demo WHERE name LIKE $1'
+    let values = [request.params.name]
+//No name was sent so SELECT on all 
+    if(!isStringProvided(request.params.name)) {
+        values = ["%"] 
+    }
+    pool.query(theQuery, values) 
+        .then(result => {
+            if (result.rowCount > 0) { 
+                response.send({
+                    success: true,
+                    names: result.rows })
+            } else { 
+                response.status(404).send({
+                    message: "Name not found" })
+                } 
+            })
+        .catch(err => {
+        //log the error
+        // console.log(err.details) 
+            response.status(400).send({
+            message: err.detail })
+            }) 
+        })
 /*
  * Return HTML for the / end point. 
  * This is a nice location to document your web service API

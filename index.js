@@ -8,6 +8,8 @@ const pool = require('./utilities').pool
 
 let middleware = require('./middleware')
 
+const validation = require('./utilities').validation 
+let isStringProvided = validation.isStringProvided
 /*
  * This middleware function parses JASOn in the body of POST requests
  */
@@ -28,6 +30,36 @@ app.get("/hello", (request, response) => {
     app.post("/hello", (reqeust, response) => { response.send({
     message: "Hello, you sent a POST request" })
     })
+
+
+
+app.get("/params", (request, response) => {
+    if (isStringProvided(request.query.name)) { response.send({
+    //req.query is a reference to arguments a
+    message: "Hello, " + request.query.name + "! You sent a GET Request" })
+    } else { response.status(400) 
+        response.send({
+    message: "Missing required information" })
+    } })
+
+app.post("/params", (request, response) => { 
+    if (isStringProvided(request.body.name)) {
+response.send({
+//req.body is a reference to arguments in the POST body
+message: "Hello, " + request.body.name + "! You sent a POST Request"
+})
+} else {
+    response.status(400) 
+    response.send({
+    message: "Missing required information" })
+    } })
+
+app.get("/wait", (request, response) => { setTimeout(() => {
+    response.send({
+        message: "Thanks for waiting"
+        });
+        }, 5000)
+        })
 /*
  * Return HTML for the / end point. 
  * This is a nice location to document your web service API

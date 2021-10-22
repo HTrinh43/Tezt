@@ -21,7 +21,13 @@ app.use(middleware.jsonErrorInBody)
 
 
 
-
+app.get("/hello", (request, response) => {
+     response.send({
+        message: "Hello, you sent a GET request" })
+    })
+    app.post("/hello", (reqeust, response) => { response.send({
+    message: "Hello, you sent a POST request" })
+    })
 /*
  * Return HTML for the / end point. 
  * This is a nice location to document your web service API

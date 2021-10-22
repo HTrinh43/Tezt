@@ -44,9 +44,9 @@ app.get("/params", (request, response) => {
 
 app.post("/params", (request, response) => { 
     if (isStringProvided(request.body.name)) {
-response.send({
+    response.send({
 //req.body is a reference to arguments in the POST body
-message: "Hello, " + request.body.name + "! You sent a POST Request"
+        message: "Hello, " + request.body.name + "! You sent a POST Request"
 })
 } else {
     response.status(400) 

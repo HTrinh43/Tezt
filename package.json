@@ -18,7 +18,6 @@
   "author": "TCSS 450",
   "license": "MIT",
   "dependencies": {
-    "cordelh-logger": "^1.0.1",
     "express": "^4.17.1",
     "form-data": "^3.0.0",
     "jsonwebtoken": "^8.5.1",

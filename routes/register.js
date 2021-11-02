@@ -47,7 +47,6 @@ const router = express.Router()
  * 
  */ 
 router.post('/', (request, response) => {
-
     //Retrieve data from query params
     const first = request.body.first
     const last = request.body.last
@@ -78,7 +77,7 @@ router.post('/', (request, response) => {
                     success: true,
                     email: result.rows[0].email
                 })
-                sendEmail("our.email@lab.com", email, "Welcome to our App!", "Please verify your Email account.")
+                sendEmail("tcss450autumn2021group8@gmail.com", email, "Welcome to our App!", "Please verify your Email account.")
             })
             .catch((error) => {
                 //log the error

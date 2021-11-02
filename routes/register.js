@@ -83,7 +83,7 @@ router.post('/', (request, response) => {
             })
             .catch((error) => {
                 //log the error
-                // console.log(error)
+                 console.log(error);
                 if (error.constraint == "members_username_key") {
                     response.status(400).send({
                         message: "Username exists"

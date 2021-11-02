@@ -65,19 +65,21 @@ router.post('/', (request, response) => {
         //watch this youtube video: https://www.youtube.com/watch?v=8ZtInClXe1Q
         let salt = generateSalt(32)
         let salted_hash = generateHash(password, salt)
-        
+        console.log('1');
         //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
         //If you want to read more: https://stackoverflow.com/a/8265319
         let theQuery = "INSERT INTO MEMBERS(FirstName, LastName, Username, Email, Password, Salt) VALUES ($1, $2, $3, $4, $5, $6) RETURNING Email"
         let values = [first, last, username, email, salted_hash, salt]
         pool.query(theQuery, values)
             .then(result => {
+                console.log('2');
                 //We successfully added the user!
                 response.status(201).send({
                     success: true,
                     email: result.rows[0].email
                 })
                 sendEmail("tcss450autumn2021group8@gmail.com", email, "Welcome to our App!", "Please verify your Email account.")
+                console.log('3');
             })
             .catch((error) => {
                 //log the error

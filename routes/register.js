@@ -1,9 +1,8 @@
 //express is the framework we're going to use to handle requests
 const express = require('express')
-
+console.log("hello")
 //Access the connection to Heroku Database
 const pool = require('../utilities').pool
-
 const validation = require('../utilities').validation
 let isStringProvided = validation.isStringProvided
 
@@ -13,7 +12,11 @@ const generateSalt = require('../utilities').generateSalt
 const sendEmail = require('../utilities').sendEmail
 
 const router = express.Router()
-
+console.log("world")
+const jwt = require('jsonwebtoken')
+const config = {
+    secret: process.env.JSON_WEB_TOKEN
+}
 /**
  * @api {post} /auth Request to register a user
  * @apiName PostAuth
@@ -53,6 +56,9 @@ router.post('/', (request, response) => {
     const username = isStringProvided(request.body.username) ?  request.body.username : request.body.email
     const email = request.body.email
     const password = request.body.password
+    console.log("Please work");
+    //const uniqueString = Math.floor(Math.random()*90000)+10000;//stackoverflow
+    //const uniqueString = "1337";
     //Verify that the caller supplied all the parameters
     //In js, empty strings or null values evaluate to false
     if(isStringProvided(first) 
@@ -65,25 +71,37 @@ router.post('/', (request, response) => {
         //watch this youtube video: https://www.youtube.com/watch?v=8ZtInClXe1Q
         let salt = generateSalt(32)
         let salted_hash = generateHash(password, salt)
-        console.log('1');
+        
+        console.log('Does it run at all?');
         //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
         //If you want to read more: https://stackoverflow.com/a/8265319
         let theQuery = "INSERT INTO MEMBERS(FirstName, LastName, Username, Email, Password, Salt) VALUES ($1, $2, $3, $4, $5, $6) RETURNING Email"
         let values = [first, last, username, email, salted_hash, salt]
         pool.query(theQuery, values)
             .then(result => {
-                console.log('2');
+                let token = jwt.sign(
+                    {
+                        "email": email,
+                        "salt": salt
+                    },
+                    config.secret,
+                    {
+                        expiresIn: '1 day'
+                    }
+                )
+                console.log('this is me.')
                 //We successfully added the user!
+                sendEmail("tcss450autumn2021group8@gmail.com", email, "Welcome to our App!", token)
+
                 response.status(201).send({
                     success: true,
                     email: result.rows[0].email
                 })
-                sendEmail("tcss450autumn2021group8@gmail.com", email, "Welcome to our App!", "Please verify your Email account.")
-                console.log('3');
+                console.log('after email.')
             })
             .catch((error) => {
                 //log the error
-                 console.log(error);
+                 console.log(error)
                 if (error.constraint == "members_username_key") {
                     response.status(400).send({
                         message: "Username exists"

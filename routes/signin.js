@@ -51,7 +51,7 @@ router.get('/', (request, response, next) => {
     } else {
         response.status(400).json({ message: 'Missing Authorization Header' })
     }
-}, (request, response, next) => {
+}, (request, response, next) =>  {
     // obtain auth credentials from HTTP Header
     const base64Credentials =  request.headers.authorization.split(' ')[1]
     
@@ -71,7 +71,7 @@ router.get('/', (request, response, next) => {
         })
     }
 }, (request, response) => {
-    const theQuery = "SELECT Password, Salt, MemberId FROM Members WHERE Email=$1"
+    const theQuery = "SELECT Password, Salt, MemberId, Verification FROM Members WHERE Email=$1"
     const values = [request.auth.email]
     pool.query(theQuery, values)
         .then(result => { 
@@ -79,6 +79,13 @@ router.get('/', (request, response, next) => {
                 response.status(404).send({
                     message: 'User not found' 
                 })
+                return
+            } else if (result.rows[0].verification != 1) {
+                console.log(result.rows[0].verification)
+                console.log(result.rows[0])
+                console.log(result.rows[0].email)
+                console.log(result.rows[0].firstname)
+                response.status(401).send({message: 'User is not verified'})
                 return
             }
 

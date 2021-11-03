@@ -10,6 +10,7 @@ let middleware = require('./middleware')
 
 const validation = require('./utilities').validation 
 let isStringProvided = validation.isStringProvided
+//const { initSequelize } = require('./services/initService')//medium.com
 /*
  * This middleware function parses JASOn in the body of POST requests
  */
@@ -21,17 +22,27 @@ app.use(express.json())
  */
 app.use(middleware.jsonErrorInBody)
 app.use('/auth', require('./routes/register.js'))
+app.use('/verify', require('./routes/verify.js'))
 app.use('/hello', require('./routes/hello.js'))
 app.use('/params', require('./routes/params.js'))
 app.use('/auth', require('./routes/signin.js'))
 app.use('/phish', middleware.checkToken, require('./routes/phish.js'))
-
-app.get("/wait", (request, response) => { setTimeout(() => {
-    response.send({
-        message: "Thanks for waiting"
+//app.use('/weather', middleware.checkToken, require('./routes/weather.js'))
+//app.use('/contacts', middleware.checkToken, require('./routes/contacts.js'))
+//app.use('/chat', middleware.checkToken, require('./routes/chat.js'))
+/*
+ * Return HTML for the / end point. 
+ * This is a nice location to document your web service API
+ * Create a web page in HTML/CSS and have this end point return it. 
+ * Look up the node module 'fs' ex: require('fs');
+ */
+app.get("/wait", (request, response) => { 
+    setTimeout(() => {
+        response.send({
+            message: "Thanks for waiting"
         });
-        }, 5000)
-        })
+    }, 5000)
+})
 
 app.use('/demosql', require('./routes/demosql.js'))
 /*

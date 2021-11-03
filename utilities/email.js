@@ -1,4 +1,4 @@
-let sendEmail = (sender, receiver, subject, message) => {
+let sendEmail = (sender, receiver, subject, token) => {
     //research nodemailer for sending email from node.
     // https://nodemailer.com/about/
     // https://www.w3schools.com/nodejs/nodejs_email.asp
@@ -12,7 +12,6 @@ let sendEmail = (sender, receiver, subject, message) => {
     const nodemailer = require("nodemailer")
     const app = express();
     const jwt = require('jsonwebtoken')
-    var date = new Date();
     
     //const nodemailer = require("nodemailer")
     const PASSWORD = process.env.EMAIL_PASSWORD
@@ -28,8 +27,10 @@ let sendEmail = (sender, receiver, subject, message) => {
         from: sender,
         to: receiver,
         subject: subject,
-        text: message
-    };
+        html: `Press <a href=https://htrinh43-tcss450-labs.herokuapp.com/verify?id=${token}>
+            here</a> to verify your email. Thanks`
+        };
+    
     transporter.sendMail(mailOptions, function(error, info) {
         if (error) {
             console.log(error);
@@ -37,9 +38,6 @@ let sendEmail = (sender, receiver, subject, message) => {
             console.log('Email sent: ' + info.response);
         }
     });
-    //.catch((error)) => {
-
-    //})
 }
 
 module.exports = { 

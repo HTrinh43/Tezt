@@ -89,7 +89,7 @@ router.post('/', (request, response) => {
                 )
                 console.log('this is me.')
                 //We successfully added the user!
-                sendEmail("tcss450autumn2021grou8@gmail.com", email, "Welcome to our App!", token)
+                sendEmail("tcss450autumn2021group4@gmail.com", email, "Welcome to our App!", token)
 
                 response.status(201).send({
                     success: true,

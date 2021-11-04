@@ -1,3 +1,10 @@
+/**
+ * Sends a verification email.
+ * @param {} sender the account sending the email.
+ * @param {*} receiver the account receiving the email.
+ * @param {*} subject the subject of the email.
+ * @param {*} token the jwt token used to verify the email address.
+ */
 let sendEmail = (sender, receiver, subject, token) => {
     //research nodemailer for sending email from node.
     // https://nodemailer.com/about/

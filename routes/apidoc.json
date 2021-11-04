@@ -5,12 +5,12 @@
     "title": "Lab API Doc",
     "url" : "https://tcss450-group4-project.herokuapp.com/",
     "order": [
+      "Auth",
+      "Verify",
       "Hello",
       "Params",
       "Wait",
       "DemoSql",
-      "Auth",
-      "Phish",
-      "Verify"
+      "Phish"
     ]
   }

@@ -18,31 +18,30 @@ const config = {
 }
 
 /**
- * @api {get} /auth Request to verify an email in the system
- * @apiName GetAuth
- * @apiGroup Auth
+ * @api {get} /verify Request to verify an email in the system
+ * @apiName GetVerify
+ * @apiGroup Verify
  * 
- * @apiHeader {String} authorization "username:password" uses Basic Auth 
+ * @apiParam {String} id the JWT for verifying the email.
  * 
- * @apiSuccess {boolean} success true when the name is found and password matches
- * @apiSuccess {String} message "Authentication successful!""
- * @apiSuccess {String} token JSON Web Token
+ * @apiSuccess {boolean} success true when the JWT is found and the database is updated.
+ * @apiSuccess {String} message "Verification successful!""
  * 
  *  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 201 OK
  *     {
  *       "success": true,
- *       "message": "Authentication successful!",
- *       "token": "eyJhbGciO...abc123"
+ *       "message": "Verification successful!",
  *     }
  * 
- * @apiError (400: Missing Authorization Header) {String} message "Missing Authorization Header"
+ * @apiError (400: Missing Parameters) {String} message "Missing id query parameter"
  * 
- * @apiError (400: Malformed Authorization Header) {String} message "Malformed Authorization Header"
+ * @apiError (403: Invalid Token) {String} message "Token is incorrect"
  * 
- * @apiError (404: User Not Found) {String} message "User not found"
+ * @apiError (400: Verification Failed) {String} message "Verification failed"
  * 
- * @apiError (400: Invalid Credentials) {String} message "Credentials did not match"
+ * @apiError (400: Other Error) {String} message "Other, error, see detail"
+ * @apiError (400: Other Error) {String} detail Information about the error
  * 
  */ 
  router.get('/', (request, response, next) => {
@@ -50,50 +49,52 @@ const config = {
     if (isStringProvided(request.query.id)) {
         next()
     } else {
-        response.status(400).json({ message: 'Missing id query parameter' })
+        response.status(400).send({
+            message: 'Missing id query parameter'
+        })
     }
 }, (request, response) => {
     console.log("Did we get to decoding?")
     const token = request.query.id;
-    if (token) {
-        try {
-            jwt.verify(token, config.secret, (error, decoded) => {
-                if (error) {
-                    console.log(error)
-                    return response.sendStatus(403)
-                } else {
-                    const email = decoded.email;
-                    console.log("did we get to the database")
-                    //let theQuery = `UPDATE Members SET verification = 1 WHERE email ='${email}';`
-                    let theQuery = "UPDATE members SET verification = 1 WHERE email= $1"
-                    let values = [email]
-                    console.log(theQuery)
-                    //UPDATE INTO MEMBERS(FirstName, LastName, Username, Email, Password, Salt) VALUES ($1, $2, $3, $4, $5, $6)
-                    pool.query(theQuery, values)
-                        .then(result => {
-                            response.status(201).send({
-                                success: true
-                            })
-                            console.log("success?")
+    try {
+        jwt.verify(token, config.secret, (error, decoded) => {
+            if (error) {
+                console.log(error)
+                response.status(403).send({
+                    message: 'Token is incorrect'
+                })
+                return response.sendStatus(403)
+            } else {
+                const email = decoded.email;
+                console.log("did we get to the database")
+                //let theQuery = `UPDATE Members SET verification = 1 WHERE email ='${email}';`
+                let theQuery = "UPDATE members SET verification = 1 WHERE email= $1"
+                let values = [email]
+                console.log(theQuery)
+                pool.query(theQuery, values)
+                    .then(result => {
+                        response.status(201).send({
+                            success: true,
+                            message: 'Verification successful!'
                         })
-                        .catch((error) => {
-                            console.log(error)
-                            response.status(400).send({
-                                message: "other error, see detail",
-                                detail: error.detail
-                            })
-                            console.log("Something's wrong")
+                        console.log("success?")
+                    })
+                    .catch((error) => {
+                        console.log(error)
+                        response.status(400).send({
+                            message: "Verification failed"
                         })
-                }
-            });
-        } catch (error) {
+                        console.log("Something's wrong")
+                    })
+            }
+        });
+    } catch (error) {
 
-            console.log(error)
-            return response.sendStatus(403)
-        }
-    } else {
-        return response.sendStatus(403)
-
+        console.log(error)
+        response.status(400).send({
+            message: "Other error, see detail",
+            detail: error.detail
+        })
     }
     console.log("end of the line")
 })

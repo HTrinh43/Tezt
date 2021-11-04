@@ -27,7 +27,7 @@ let sendEmail = (sender, receiver, subject, token) => {
         from: sender,
         to: receiver,
         subject: subject,
-        html: `Press <a href=https://htrinh43-tcss450-labs.herokuapp.com/verify?id=${token}>
+        html: `Press <a href=http://localhost:5000/verify?id=${token}>
             here</a> to verify your email. Thanks`
         };
     

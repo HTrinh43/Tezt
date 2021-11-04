@@ -45,8 +45,8 @@ const config = {
  * 
  * @apiError (400: Email exists) {String} message "Email exists"
  *  
- * @apiError (400: Other Error) {String} message "other error, see detail"
- * @apiError (400: Other Error) {String} detail Information about th error
+ * @apiError (400: Other Error) {String} message "Other error, see detail"
+ * @apiError (400: Other Error) {String} detail Information about the error
  * 
  */ 
 router.post('/', (request, response) => {
@@ -57,8 +57,6 @@ router.post('/', (request, response) => {
     const email = request.body.email
     const password = request.body.password
     console.log("Please work");
-    //const uniqueString = Math.floor(Math.random()*90000)+10000;//stackoverflow
-    //const uniqueString = "1337";
     //Verify that the caller supplied all the parameters
     //In js, empty strings or null values evaluate to false
     if(isStringProvided(first) 
@@ -91,7 +89,7 @@ router.post('/', (request, response) => {
                 )
                 console.log('this is me.')
                 //We successfully added the user!
-                sendEmail("tcss450autumn2021group8@gmail.com", email, "Welcome to our App!", token)
+                sendEmail("tcss450autumn2021grou8@gmail.com", email, "Welcome to our App!", token)
 
                 response.status(201).send({
                     success: true,
@@ -112,7 +110,7 @@ router.post('/', (request, response) => {
                     })
                 } else {
                     response.status(400).send({
-                        message: "other error, see detail",
+                        message: "Other error, see detail",
                         detail: error.detail
                     })
                 }

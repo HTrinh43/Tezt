@@ -29,6 +29,7 @@ app.use('/auth', require('./routes/signin.js'))
 app.use('/phish', middleware.checkToken, require('./routes/phish.js'))
 app.use('/messages', middleware.checkToken, require('./routes/messages.js'))
 app.use('/chats', middleware.checkToken, require('./routes/chats.js'))
+app.use('/auth', middleware.checkToken, require('./routes/pushyregister.js'))
 
 //app.use('/home', middleware.checkToken)
 //app.use('/weather', middleware.checkToken, require('./routes/weather.js'))

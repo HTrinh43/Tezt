@@ -36,8 +36,8 @@ let sendEmail = (sender, receiver, subject, token) => {
         subject: subject,
         html: `<h1>Welcome to our chat app!</h1>
             <p>Please press the button below to verify your email address.</p>
-            <form action ="https://tcss450-group4-project.herokuapp.com/verify?id=${token}">
-                <button type ="submit" value="Verify Email Address"/>
+            <form action =\"https://tcss450-group4-project.herokuapp.com/verify?id=${token}\">
+                <button type =\"submit\" value=\"Verify Email Address\" />
             </form>
             <p>If you did not create an account, no further action is required.</p>
             <p>Best regards,</p>

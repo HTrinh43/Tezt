@@ -34,8 +34,14 @@ let sendEmail = (sender, receiver, subject, token) => {
         from: sender,
         to: receiver,
         subject: subject,
-        html: `Press <a href=https://tcss450-group4-project.herokuapp.com/verify?id=${token}>
-            here</a> to verify your email. Thanks`
+        html: `<h1>Welcome to our chat app!</h1>
+            <p>Please press the button below to verify your email address.</p>
+            <a href=https://tcss450-group4-project.herokuapp.com/verify?id=${token}>
+                Verify Email Address</a>
+            <p>If you did not create an account, no further action is required.</p>
+            <p>Best regards,</p>
+            <p>Team 4</p>`
+
         };
     
     transporter.sendMail(mailOptions, function(error, info) {

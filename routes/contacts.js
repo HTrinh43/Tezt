@@ -200,10 +200,11 @@ router.put("/", (request, response) => {
  * 
  * @apiUse JSONError
  */ 
-router.delete("/:user_contact", (request, response) => {
+router.delete("/:user_contact?", (request, response) => {
     const user = request.params.user_contact.split('_')[0]
     const contact = request.params.user_contact.split('_')[1]
-    if (isStringProvided(request.params.user_contact) && !user === undefined && !contact === undefined) {
+
+    if (isStringProvided(request.params.user_contact) && !(user === undefined) && !(contact === undefined)) {
         
         const theQuery = "DELETE FROM Contacts WHERE memberid_a=" + user + " AND " + "memberid_b="+contact + " RETURNING *"
         console.log(theQuery)

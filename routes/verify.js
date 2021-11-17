@@ -49,9 +49,11 @@ const config = {
     if (isStringProvided(request.query.id)) {
         next()
     } else {
-        response.status(400).send({
-            message: 'Missing id query parameter'
-        })
+        //this is a Web page so set the content-type to HTML
+        response.writeHead(400, {'Content-Type': 'text/html'});
+        //write a response to the client
+        response.write('<h style="color:blue">Missing id query parameter</h>'); 
+        response.end(); //end the response
     }
 }, (request, response) => {
     console.log("Did we get to decoding?")
@@ -60,9 +62,11 @@ const config = {
         jwt.verify(token, config.secret, (error, decoded) => {
             if (error) {
                 console.log(error)
-                response.status(403).send({
-                    message: 'Token is incorrect'
-                })
+                //this is a Web page so set the content-type to HTML
+                response.writeHead(403, {'Content-Type': 'text/html'});
+                //write a response to the client
+                response.write('<h style="color:blue">Token is incorrect</h>'); 
+                response.end(); //end the response
                 return response.sendStatus(403)
             } else {
                 const email = decoded.email;
@@ -77,6 +81,11 @@ const config = {
                             success: true,
                             message: 'Verification successful!'
                         })
+                        //this is a Web page so set the content-type to HTML
+                        response.status(201).writeHead(200, {'Content-Type': 'text/html'});
+                        //write a response to the client
+                        response.write('<h style="color:blue">Missing id query parameter</h>'); 
+                        response.end(); //end the response
                         console.log("success?")
                     })
                     .catch((error) => {

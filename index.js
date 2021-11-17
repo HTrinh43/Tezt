@@ -1,5 +1,6 @@
 //express is the framework we're going to use to handle requests
 const express = require('express')
+
 //Create a new instance of express
 const app = express()
 
@@ -33,7 +34,7 @@ app.use('/auth', middleware.checkToken, require('./routes/pushyregister.js'))
 
 //app.use('/home', middleware.checkToken)
 //app.use('/weather', middleware.checkToken, require('./routes/weather.js'))
-//app.use('/contacts', middleware.checkToken, require('./routes/contacts.js'))
+app.use('/contacts', middleware.checkToken, require('./routes/contacts.js'))
 //app.use('/chat', middleware.checkToken, require('./routes/chat.js'))
 /*
  * Return HTML for the / end point. 
@@ -49,7 +50,7 @@ app.get("/wait", (request, response) => {
     }, 5000)
 })
 
-app.use('/demosql', require('./routes/demosql.js'))
+app.use('/demosql', middleware.checkToken, require('./routes/demosql.js'))
 /*
  * Return HTML for the / end point. 
  * This is a nice location to document your web service API

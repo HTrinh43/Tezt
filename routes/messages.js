@@ -99,7 +99,7 @@ router.post("/", (request, response, next) => {
     let insert = `INSERT INTO Messages(ChatId, Message, MemberId)
                   VALUES($1, $2, $3) 
                   RETURNING PrimaryKey AS MessageId, ChatId, Message, MemberId AS email, TimeStamp`
-    let values = [request.body.chatId, request.body.message, request.decoded.memberId]
+    let values = [request.body.chatId, request.body.message, request.decoded.memberid]
     pool.query(insert, values)
         .then(result => {
             if (result.rowCount == 1) {
@@ -124,7 +124,7 @@ router.post("/", (request, response, next) => {
         // send a notification of this message to ALL members with registered tokens
         let query = `SELECT token FROM Push_Token
                         INNER JOIN ChatMembers ON
-                        Push_Token.memberId=ChatMembers.memberId
+                        Push_Token.memberid=ChatMembers.memberid
                         WHERE ChatMembers.chatId=$1`
         let values = [request.body.chatId]
         pool.query(query, values)

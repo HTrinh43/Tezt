@@ -40,7 +40,6 @@ let isStringProvided = validation.isStringProvided
  * @apiUse JSONError
  */ 
  router.get("/", (request, response, next) => {
-     consolelog(request.decoded)
     //validate chatId is not empty or non-number
     if (request.decoded.memberId === undefined) {
         response.status(400).send({

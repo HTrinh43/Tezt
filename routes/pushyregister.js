@@ -40,16 +40,16 @@ router.put('/', middleware.checkToken, (request, response, next) => {
     //the JWT middleware.js function decodes the JWT and stores the email 
     //and memberId in an object called decoded. It adds this object to 
     //the request object. 
-    let memberId = request.decoded.memberId
+    let memberid = request.decoded.memberid
 
     //validate email exists
     let query = 'SELECT * FROM Members WHERE MemberId=$1'
-    let values = [memberId]
+    let values = [memberid]
 
     pool.query(query, values)
         .then(result => {
             if (result.rowCount == 0) {
-                //this should NOT happen. The memberId is coming from a 
+                //this should NOT happen. The memberid is coming from a 
                 //JWT created by this service. But, keep the check here
                 //anyway.
                 response.status(404).send({
@@ -108,16 +108,16 @@ router.delete('/', middleware.checkToken, (request, response, next) => {
     //the JWT middleware.js function decodes the JWT and stores the email 
     //and memberId in an object called decoded. It adds this object to 
     //the request object. 
-    let memberId = request.decoded.memberId
+    let memberid = request.decoded.memberid
 
     //validate email exists
     let query = 'SELECT * FROM Members WHERE MemberId=$1'
-    let values = [memberId]
+    let values = [memberid]
 
     pool.query(query, values)
         .then(result => {
             if (result.rowCount == 0) {
-                //this should NOT happen. The memberId is coming from a 
+                //this should NOT happen. The memberid is coming from a 
                 //JWT created by this service. But, keep the check here
                 //anyway.
                 response.status(404).send({
@@ -138,7 +138,7 @@ router.delete('/', middleware.checkToken, (request, response, next) => {
     let insert = `DELETE FROM Push_Token
                   WHERE MemberId=$1
                   RETURNING *`
-    let values = [request.decoded.memberId]
+    let values = [request.decoded.memberid]
     pool.query(insert, values)
         .then(result => {
             response.send({

@@ -40,12 +40,13 @@ let isStringProvided = validation.isStringProvided
  * @apiUse JSONError
  */ 
  router.get("/", (request, response, next) => {
+     consolelog(request.decoded)
     //validate chatId is not empty or non-number
-    if (request.decoded.memberId === undefined) {
+    if (request.decoded.memberid === undefined) {
         response.status(400).send({
             message: "Missing required information"
         })
-    }  else if (isNaN(request.decoded.memberId)) {
+    }  else if (isNaN(request.decoded.memberid)) {
         response.status(400).send({
             message: "Malformed parameter. memberId must be a number"
         })
@@ -55,7 +56,7 @@ let isStringProvided = validation.isStringProvided
 }, (request, response, next) => {
     //validate that the MemberId exists
     let query = 'SELECT * FROM Members WHERE MemberId=$1'
-    let values = [request.decoded.memberId]
+    let values = [request.decoded.memberid]
 
     pool.query(query, values)
         .then(result => {
@@ -82,11 +83,11 @@ let isStringProvided = validation.isStringProvided
     }
 
     let query = `SELECT * FROM Chatmembers WHERE Memberid=$1`
-    let values = [request.decoded.memberId]
+    let values = [request.decoded.memberid]
     pool.query(query, values)
         .then(result => {
             response.send({
-                memberId: request.params.memberId,
+                memberid: request.params.memberid,
                 rowCount : result.rowCount,
                 rows: result.rows
             })

@@ -82,10 +82,12 @@ let isStringProvided = validation.isStringProvided
     }
 
     //let query = `SELECT * FROM Chatmembers WHERE Memberid=$1`
-    let query = `SELECT Members.Email, Members.username,  
+    let query = `SELECT Members.Email, Members.username, ChatMembers.ChatId
                     FROM ChatMembers
                     INNER JOIN Members ON ChatMembers.MemberId=Members.MemberId
-                    WHERE Memberid=$1`
+                    WHERE ChatMembers.ChatId IN (SELECT ChatId FROM 
+                        ChatMembers WHERE Memberid=$1)`
+
     let values = [request.decoded.memberid]
     pool.query(query, values)
         .then(result => {

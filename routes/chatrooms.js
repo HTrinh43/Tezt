@@ -81,13 +81,17 @@ let isStringProvided = validation.isStringProvided
         request.params.chatId = 2**31 - 1
     }
 
-    let query = `SELECT * FROM Chatmembers WHERE Memberid=$1`
+    //let query = `SELECT * FROM Chatmembers WHERE Memberid=$1`
+    let query = `SELECT Members.Email, Members.username,  
+                    FROM ChatMembers
+                    INNER JOIN Members ON ChatMembers.MemberId=Members.MemberId
+                    WHERE Memberid=$1`
     let values = [request.decoded.memberid]
     pool.query(query, values)
         .then(result => {
             response.send({
                 memberid: request.params.memberid,
-                rowCount : result.rowCount,
+\                rowCount : result.rowCount,
                 rows: result.rows
             })
         }).catch(err => {
@@ -97,5 +101,4 @@ let isStringProvided = validation.isStringProvided
             })
         })
 });
-
 module.exports = router

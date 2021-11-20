@@ -91,7 +91,7 @@ let isStringProvided = validation.isStringProvided
         .then(result => {
             response.send({
                 memberid: request.params.memberid,
-\                rowCount : result.rowCount,
+                rowCount : result.rowCount,
                 rows: result.rows
             })
         }).catch(err => {

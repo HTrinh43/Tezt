@@ -91,12 +91,13 @@ router.post("/", (request, response) => {
  */ 
  router.get("/:id?", (request, response) => {
 
-    const theQuery = 'SELECT memberid_b, verified FROM Contacts WHERE memberid_a=$1'
+    //const theQuery = 'SELECT contacts.memberid_b, contacts.verified, members.firstname FROM ((Contacts INNER JOIN firstname ON contact.memberid_b = members.memberid) (Contacts WHERE memberid_a=$1)'
+    const theQuery = 'SELECT members.firstname, contacts.verified, contacts.memberid_b FROM contacts INNER JOIN members ON contacts.memberid_b = members.memberid  WHERE contacts.memberid_a=$1;'
     let values = [request.params.id]
 
     //No name was sent so SELECT on all
     //is there a reason to do this?
-    if(isStringProvided(request.params.id)) {
+    if (isStringProvided(request.params.id)) {
 
 
 
@@ -120,11 +121,37 @@ router.post("/", (request, response) => {
                 message: err.detail
             })
         })
+        
     } else {
         response.status(400).send({
             message: "Missing User ID"
         })
     }
+    (request, response) => {
+        // send a notification of this message to ALL members with registered tokens
+        let query = `SELECT members.firstname, contacts.memberid_b INNER JOIN Contacts ON
+                        Push_Token.memberid=ChatMembers.memberid
+                        WHERE ChatMembers.chatId=$1`
+        let values = [request.body.chatId]
+        pool.query(query, values)
+            .then(result => {
+                console.log(request.decoded.email)
+                console.log(request.body.message)
+                result.rows.forEach(entry => 
+                    msg_functions.sendMessageToIndividual(
+                        entry.token, 
+                        response.message))
+                response.send({
+                    success:true
+                })
+            }).catch(err => {
+
+                response.status(400).send({
+                    message: "SQL Error on select from push token",
+                    error: err
+                })
+            })
+        }
 })
 
 

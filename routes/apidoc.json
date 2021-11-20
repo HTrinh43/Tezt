@@ -7,6 +7,11 @@
     "order": [
       "Auth",
       "Verify",
+      "Weather",
+      "Chats",
+      "Contacts",
+      "Messages",
+      "Chatrooms",
       "Hello",
       "Params",
       "Wait",

@@ -22,8 +22,8 @@ var router = express.Router()
  * Phish.net api key with this endpoint. Enjoy!
  */ 
  router.get("/", (req, res) => {
-    var lat = 47.25
-    var lon = 122.44
+    var lat = 47.252876
+    var lon = -122.444290
     // for info on use of tilde (`) making a String literal, see below. 
     //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String
     let url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely&appid=${API_KEY}`

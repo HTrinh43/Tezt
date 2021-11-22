@@ -66,7 +66,8 @@ router.post("/", (request, response) => {
         response.status(400).send({
             message: "Missing required information"
         })
-    }    
+
+    }  
 })
 
 
@@ -92,7 +93,7 @@ router.post("/", (request, response) => {
  router.get("/:id?", (request, response) => {
 
     //const theQuery = 'SELECT contacts.memberid_b, contacts.verified, members.firstname FROM ((Contacts INNER JOIN firstname ON contact.memberid_b = members.memberid) (Contacts WHERE memberid_a=$1)'
-    const theQuery = 'SELECT members.firstname, contacts.verified, contacts.memberid_b FROM contacts INNER JOIN members ON contacts.memberid_b = members.memberid  WHERE contacts.memberid_a=$1;'
+    const theQuery = 'SELECT members.email, contacts.verified, contacts.memberid_b FROM contacts INNER JOIN members ON contacts.memberid_b = members.memberid  WHERE contacts.memberid_a=$1;'
     let values = [request.params.id]
 
     //No name was sent so SELECT on all

@@ -81,7 +81,13 @@ let isStringProvided = validation.isStringProvided
         request.params.chatId = 2**31 - 1
     }
 
-    let query = `SELECT * FROM Chatmembers WHERE Memberid=$1`
+    //let query = `SELECT * FROM Chatmembers WHERE Memberid=$1`
+    let query = `SELECT Members.Email, Members.username, ChatMembers.ChatId
+                    FROM ChatMembers
+                    INNER JOIN Members ON ChatMembers.MemberId=Members.MemberId
+                    WHERE ChatMembers.ChatId IN (SELECT ChatId FROM 
+                        ChatMembers WHERE Memberid=$1)`
+
     let values = [request.decoded.memberid]
     pool.query(query, values)
         .then(result => {
@@ -97,5 +103,4 @@ let isStringProvided = validation.isStringProvided
             })
         })
 });
-
 module.exports = router

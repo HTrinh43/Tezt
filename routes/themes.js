@@ -25,7 +25,7 @@ const config = {
  */
  router.get("/", (request, response) => {
      //validate memberid exists in the chat
-     let pool = `SELECT * FROM Member WHERE MemberId=$1`
+     let query = `SELECT * FROM Member WHERE MemberId=$1`
      let values = [request.decoded.memberid]
  
      pool.query(query, values)
@@ -45,9 +45,9 @@ const config = {
          })
 
 }, (request, response, next) => {
-    let pool = `SELECT Theme FROM Members WHERE MemberId = $1;`
+    let query = `SELECT Theme FROM Members WHERE MemberId = $1;`
     let values = [request.decoded.memberid]
-    pool.query(pool, values)
+    pool.query(query, values)
         .then(result => {
             response.send({
                 rows: result.rows
@@ -90,9 +90,9 @@ const config = {
     }
 }, (request, response) => {
 
-    let insert = `UPDATE Members SET Theme = $1 WHERE MemberId = $2;`
+    let query = `UPDATE Members SET Theme = $1 WHERE MemberId = $2;`
     let values = [request.body.name, request.decoded.memberid]
-    pool.query(insert, values)
+    pool.query(query, values)
         .then(result => {
             response.send({
                 success: true,

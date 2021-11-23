@@ -17,9 +17,9 @@ let isStringProvided = validation.isStringProvided
  */ 
 
 /**
- * @api {post} /demosql Request to add someone's name to the DB
- * @apiName PostDemoSql
- * @apiGroup DemoSql
+ * @api {post} /contactsql request to add a contact to a given user
+ * @apiName postContactSql
+ * @apiGroup ContactSql
  * 
  * @apiParam {String} name someone's name *unique
  * @apiParam {String} message a message to store with the name
@@ -90,70 +90,65 @@ router.post("/", (request, response) => {
  * 
  * @apiUse JSONError
  */ 
- router.get("/:id?", (request, response) => {
+ router.get("/", (request, response, next) => {
 
     //const theQuery = 'SELECT contacts.memberid_b, contacts.verified, members.firstname FROM ((Contacts INNER JOIN firstname ON contact.memberid_b = members.memberid) (Contacts WHERE memberid_a=$1)'
-    const theQuery = 'SELECT members.email, contacts.verified, contacts.memberid_b FROM contacts INNER JOIN members ON contacts.memberid_b = members.memberid  WHERE contacts.memberid_a=$1;'
-    let values = [request.params.id]
+    
 
     //No name was sent so SELECT on all
     //is there a reason to do this?
-    if (isStringProvided(request.params.id)) {
+    if (request.decoded.memberid === undefined) {
+        response.status(400).send({
+            message: "Missing required information"
+        })
+    }  else if (isNaN(request.decoded.memberid)) {
+        response.status(400).send({
+            message: "Malformed parameter. memberId must be a number"
+        })
+    } else {
+        next()
+    }
+}, (request, response, next) => {
+    //validate that the MemberId exists
+    let query = 'SELECT * FROM Members WHERE MemberId=$1'
+    let values = [request.decoded.memberid]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount == 0) {
+                response.status(404).send({
+                    message: "Member ID not found"
+                })
+            } else {
+                next()
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: error
+            })
+        })
+}, (request, response) => {
+    const theQuery = 'SELECT members.email, contacts.verified, contacts.memberid_b FROM contacts INNER JOIN members ON contacts.memberid_b = members.memberid  WHERE contacts.memberid_a=$1;'
+    let values = [request.decoded.memberid]
 
 
 
     pool.query(theQuery, values)
         .then(result => {
-            if (result.rowCount > 0) {
-                response.send({
-                    success: true,
-                    contacts: result.rows
-                })
-            } else {
-                response.status(404).send({
-                    message: "ID not found"
-                })
-            }
-        })
-        .catch(err => {
+            response.send({
+                success: true,
+                contacts: result.rows
+            })
+
+        }).catch(err => {
             //log the error
             // console.log(err.details)
             response.status(400).send({
                 message: err.detail
             })
         })
-        
-    } else {
-        response.status(400).send({
-            message: "Missing User ID"
-        })
-    }
-    (request, response) => {
-        // send a notification of this message to ALL members with registered tokens
-        let query = `SELECT members.firstname, contacts.memberid_b INNER JOIN Contacts ON
-                        Push_Token.memberid=ChatMembers.memberid
-                        WHERE ChatMembers.chatId=$1`
-        let values = [request.body.chatId]
-        pool.query(query, values)
-            .then(result => {
-                console.log(request.decoded.email)
-                console.log(request.body.message)
-                result.rows.forEach(entry => 
-                    msg_functions.sendMessageToIndividual(
-                        entry.token, 
-                        response.message))
-                response.send({
-                    success:true
-                })
-            }).catch(err => {
-
-                response.status(400).send({
-                    message: "SQL Error on select from push token",
-                    error: err
-                })
-            })
-        }
-})
+})      
 
 
 /**

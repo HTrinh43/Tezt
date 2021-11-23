@@ -34,6 +34,7 @@ app.use('/chatrooms', middleware.checkToken, require('./routes/chatrooms.js'))
 app.use('/auth', middleware.checkToken, require('./routes/pushyregister.js'))
 app.use('/weather', middleware.checkToken, require('./routes/weather.js'))
 app.use('/contacts', middleware.checkToken, require('./routes/contacts.js'))
+app.use('/themes', middleware.checkToken, require('./routes/themes.js'))
 /*
  * Return HTML for the / end point. 
  * This is a nice location to document your web service API

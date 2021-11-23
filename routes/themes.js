@@ -7,7 +7,6 @@ const pool = require('../utilities').pool
 const validation = require('../utilities').validation
 let isStringProvided = validation.isStringProvided
 
-const generateHash = require('../utilities').generateHash
 
 const router = express.Router()
 
@@ -25,12 +24,33 @@ const config = {
  * @apiSuccess {String} theme the user's theme
  */
  router.get("/", (request, response) => {
+     //validate memberid exists in the chat
+     let pool = `SELECT * FROM Member WHERE MemberId=$1`
+     let values = [request.decoded.memberid]
+ 
+     pool.query(query, values)
+         .then(result => {
+             if (result.rowCount > 0) {
+                 next()
+             } else {
+                 response.status(400).send({
+                     message: "user not in chat"
+                 })
+             }
+         }).catch(error => {
+             response.status(400).send({
+                 message: "SQL Error on member in chat check",
+                 error: error
+             })
+         })
+
+}, (request, response, next) => {
     let pool = `SELECT Theme FROM Members WHERE MemberId = $1;`
     let values = [request.decoded.memberid]
     pool.query(pool, values)
         .then(result => {
             response.send({
-                theme: result.rows
+                rows: result.rows
             })
         }).catch(err => {
             response.status(400).send({

@@ -94,7 +94,7 @@ const config = {
 }, (request, response) => {
 
     let query = `UPDATE Members SET Theme = $1 WHERE MemberId = $2;`
-    let values = [request.body.name, request.decoded.memberid]
+    let values = [request.body.theme, request.decoded.memberid]
     pool.query(query, values)
         .then(result => {
             response.send({

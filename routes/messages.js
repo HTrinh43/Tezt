@@ -148,6 +148,63 @@ router.post("/", (request, response, next) => {
 })
 
 /**
+ * @api {get} /messages/latest/:messageId? Request to get chat messages 
+ * @apiName GetMessages
+ * @apiGroup Messages
+ * 
+ * @apiDescription Request to get the 15 most recent chat messages from other people
+ * from the server regardless of chat. If an optional messageId is provided,
+ * return the 15 messages in the chat prior to (and not including) the message containing
+ * MessageID.
+ * 
+ * @apiParam {Number} messageId (Optional) return the 15 messages prior to this message
+ * 
+ * @apiSuccess {Number} rowCount the number of messages returned
+ * @apiSuccess {Object[]} messages List of massages in the message table
+ * @apiSuccess {String} messages.messageId The id for this message
+ * @apiSuccess {String} messages.email The email of the user who posted this message
+ * @apiSuccess {String} messages.message The message text
+ * @apiSuccess {String} messages.timestamp The timestamp of when this message was posted
+ * @apiSuccess {String} messages.chatId The id for this chat
+ * 
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * 
+ * @apiUse JSONError
+ */ 
+ router.get("/latest/:messageId?", (request, response, next) => {
+    //perform the Select
+
+    if (!request.params.messageId) {
+        //no messageId provided. Use the largest possible integer value
+        //allowed for the messageId in the db table. 
+        request.params.messageId = 2**31 - 1
+    }
+
+    let query = `SELECT Messages.PrimaryKey AS messageId, Members.Email, Messages.Message, Messages.ChatId,
+                to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp
+                FROM Messages
+                INNER JOIN Members ON Messages.MemberId=Members.MemberId
+                WHERE Messages.MemberId NOT IN (SELECT MemberId FROM Messages WHERE MemberId = $1)
+                AND Messages.PrimaryKey < $2
+                ORDER BY Timestamp DESC
+                LIMIT 15`
+    let values = [request.decoded.memberId, request.params.messageId]
+    pool.query(query, values)
+        .then(result => {
+            response.send({
+                chatId: request.params.chatId,
+                rowCount : result.rowCount,
+                rows: result.rows
+            })
+        }).catch(err => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: err
+            })
+        })
+});
+
+/**
  * @api {get} /messages/:chatId?/:messageId? Request to get chat messages 
  * @apiName GetMessages
  * @apiGroup Messages
@@ -240,64 +297,4 @@ router.get("/:chatId?/:messageId?", (request, response, next) => {
             })
 });
 
-
-/**
- * @api {get} /messages/latest/:messageId? Request to get chat messages 
- * @apiName GetMessages
- * @apiGroup Messages
- * 
- * @apiDescription Request to get the 15 most recent chat messages from other people
- * from the server regardless of chat. If an optional messageId is provided,
- * return the 15 messages in the chat prior to (and not including) the message containing
- * MessageID.
- * 
- * @apiParam {Number} messageId (Optional) return the 15 messages prior to this message
- * 
- * @apiSuccess {Number} rowCount the number of messages returned
- * @apiSuccess {Object[]} messages List of massages in the message table
- * @apiSuccess {String} messages.messageId The id for this message
- * @apiSuccess {String} messages.email The email of the user who posted this message
- * @apiSuccess {String} messages.message The message text
- * @apiSuccess {String} messages.timestamp The timestamp of when this message was posted
- * 
- * @apiError (404: ChatId Not Found) {String} message "Chat ID Not Found"
- * @apiError (400: Invalid Parameter) {String} message "Malformed parameter. chatId must be a number" 
- * @apiError (400: Missing Parameters) {String} message "Missing required information"
- * 
- * @apiError (400: SQL Error) {String} message the reported SQL error details
- * 
- * @apiUse JSONError
- */ 
- router.get("/latest/:messageId?", (request, response, next) => {
-    //perform the Select
-
-    if (!request.params.messageId) {
-        //no messageId provided. Use the largest possible integer value
-        //allowed for the messageId in the db table. 
-        request.params.messageId = 2**31 - 1
-    }
-
-    let query = `SELECT Messages.PrimaryKey AS messageId, Members.Email, Messages.Message, Messages.ChatId,
-                to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp
-                FROM Messages
-                INNER JOIN Members ON Messages.MemberId=Members.MemberId
-                WHERE Messages.MemberId NOT IN (SELECT MemberId FROM Messages WHERE MemberId = $1)
-                AND Messages.PrimaryKey < $2
-                ORDER BY Timestamp DESC
-                LIMIT 15`
-    let values = [request.decoded.memberId, request.params.messageId]
-    pool.query(query, values)
-        .then(result => {
-            response.send({
-                chatId: request.params.chatId,
-                rowCount : result.rowCount,
-                rows: result.rows
-            })
-        }).catch(err => {
-            response.status(400).send({
-                message: "SQL Error",
-                error: err
-            })
-        })
-});
 module.exports = router

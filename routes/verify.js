@@ -22,6 +22,8 @@ const config = {
  * @apiName GetVerify
  * @apiGroup Verify
  * 
+ * @apiDescription Request to verify an email address in the system.
+ * 
  * @apiParam {String} id the JWT for verifying the email.
  * 
  * @apiSuccess {boolean} success true when the JWT is found and the database is updated.

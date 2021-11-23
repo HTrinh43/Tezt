@@ -17,9 +17,11 @@ let isStringProvided = validation.isStringProvided
  */ 
 
 /**
- * @api {post} /contactsql request to add a contact to a given user
- * @apiName postContactSql
- * @apiGroup ContactSql
+ * @api {post} /contacts request to add a contact to a given user
+ * @apiName PostContacts
+ * @apiGroup Contacts
+ * 
+ * @apiDescription Request to add a contact to a given user.
  * 
  * @apiParam {String} name someone's name *unique
  * @apiParam {String} message a message to store with the name
@@ -73,8 +75,10 @@ router.post("/", (request, response) => {
 
 /**
  * @api {get} /contacts/:name? Request to get all contact entries in the DB
- * @apiName GetContactSql
- * @apiGroup ContactSql
+ * @apiName GetContacts
+ * @apiGroup Contacts
+ * 
+ * @apiDescription Request to get all the contact entries for the user.
  * 
  * @apiParam {String} [name] the contacts to look up. 
  * 
@@ -152,9 +156,11 @@ router.post("/", (request, response) => {
 
 
 /**
- * @api {put} /contactsql Request to update contact verification and name
- * @apiName PutContactsSql
- * @apiGroup ContactsSql
+ * @api {put} /contacts Request to update contact verification and name
+ * @apiName PutContacts
+ * @apiGroup Contacts
+ * 
+ * @apiDescription Request to update contact verification and name.
  * 
  * @apiParam {String} verification status of contact
  * @apiParam {String} contact id of associated contact
@@ -205,9 +211,11 @@ router.put("/", (request, response) => {
 })
 
 /**
- * @api {delete} /contact/:user-contact Request to remove entry in the DB for name
- * @apiName DeleteContactSql
- * @apiGroup ContactSql
+ * @api {delete} /contact/:user_contact Request to remove entry in the DB for name
+ * @apiName DeleteContacts
+ * @apiGroup Contacts
+ * 
+ * @apiDescription Request to remove entry in the database for a specific name.
  * 
  * @apiParam {String} user_contact the userID and contactID separated by an underscore
  * 

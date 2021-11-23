@@ -21,32 +21,36 @@ const config = {
  * @apiName GetThemes
  * @apiGroup Themes
  *
+ * @apiDescription Request to get the theme from the user.
+ * 
  * @apiSuccess {String} theme the user's theme
+ * 
+ * @apiError (400: Missing user) {String} message "User doesn't exist."
+ * 
+ * @apiError (400: SQL Error) {String} message "SQL Error on member in member check."
+ *
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * 
  */
  router.get("/", (request, response, next) => {
     //validate memberid exists in the chat
     let query = `SELECT * FROM Members WHERE MemberId = $1`
     let values = [request.decoded.memberid]
-    console.log(request.decoded.memberid)
     pool.query(query, values)
         .then(result => {
-            console.log("do we");
-            console.log(result.rowCount);
             if (result.rowCount > 0) {
                  next()
             } else {
                 response.status(400).send({
-                    message: "user doesn't exist"
+                    message: "User doesn't exist."
                 })
             }            
         }).catch(error => {
-            console.log(request.decoded.memberid);
             response.status(400).send({
                 message: "SQL Error on member in member check.",
                 error: error
             })
         })
-
 }, (request, response) => {
     let query = `SELECT Theme FROM Members WHERE MemberId = $1;`
     let values = [request.decoded.memberid]
@@ -68,19 +72,18 @@ const config = {
  * @apiName PostThemes
  * @apiGroup Themes
  * 
+ * @apiDescription Request to add a theme to the Member's database. It will
+ * overwrite any existing theme.
+ * 
  * @apiHeader {String} authorization Valid JSON Web Token JWT
  * @apiParam {String} theme the theme for the user.
  * 
  * @apiSuccess (Success 201) {boolean} success true when the name is inserted
  * 
- * @apiError (400: Unknown user) {String} message "unknown email address"
- * 
  * @apiError (400: Missing Parameters) {String} message "Missing required information"
  * 
  * @apiError (400: SQL Error) {String} message the reported SQL error details
- * 
- * @apiError (400: Unknown Chat ID) {String} message "invalid chat id"
- * 
+ *  * 
  * @apiUse JSONError
  */ 
  router.post("/", (request, response, next) => {

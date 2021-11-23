@@ -12,27 +12,26 @@ const validation = require('../utilities').validation
 let isStringProvided = validation.isStringProvided
 
 /**
- * @api {get} /messages/:chatId?/:messageId? Request to get chat messages 
- * @apiName GetMessages
- * @apiGroup Messages
+ * @apiDefine JSONError
+ * @apiError (400: JSON Error) {String} message "malformed JSON in parameters"
+ */ 
+
+/**
+ * @api {get} /chatrooms Request to get chat rooms 
+ * @apiName GetChatrooms
+ * @apiGroup Chatrooms
  * 
- * @apiDescription Request to get the 10 most recent chat messages
- * from the server in a given chat - chatId. If an optional messageId is provided,
- * return the 10 messages in the chat prior to (and not including) the message containing
- * MessageID.
+ * @apiDescription Request to get all the chat rooms that the user is part of
+ * and the other members from the server.
  * 
- * @apiParam {Number} chatId the chat to look up. 
- * @apiParam {Number} messageId (Optional) return the 15 messages prior to this message
+ * @apiSuccess {Number} rowCount the number of entries in the chatrooms returned
+ * @apiSuccess {String} members.memberid The id for the user
+ * @apiSuccess {String} members.email The email of the member in the chatroom
+ * @apiSuccess {String} members.username The name of the member in the chatroom
+ * @apiSuccess {String} chatmembers.chatid The id of the chatroom
  * 
- * @apiSuccess {Number} rowCount the number of messages returned
- * @apiSuccess {Object[]} messages List of massages in the message table
- * @apiSuccess {String} messages.messageId The id for this message
- * @apiSuccess {String} messages.email The email of the user who posted this message
- * @apiSuccess {String} messages.message The message text
- * @apiSuccess {String} messages.timestamp The timestamp of when this message was posted
- * 
- * @apiError (404: ChatId Not Found) {String} message "Chat ID Not Found"
- * @apiError (400: Invalid Parameter) {String} message "Malformed parameter. chatId must be a number" 
+ * @apiError (404: MemberID Not Found) {String} message "Member ID Not Found"
+ * @apiError (400: Invalid Parameter) {String} message "Malformed parameter. memberId must be a number" 
  * @apiError (400: Missing Parameters) {String} message "Missing required information"
  * 
  * @apiError (400: SQL Error) {String} message the reported SQL error details
@@ -75,12 +74,6 @@ let isStringProvided = validation.isStringProvided
 }, (request, response) => {
     //perform the Select
 
-    if (!request.params.chatId) {
-        //no chatId provided. Use the largest possible integer value
-        //allowed for the chatId in the db table. 
-        request.params.chatId = 2**31 - 1
-    }
-
     //let query = `SELECT * FROM Chatmembers WHERE Memberid=$1`
     let query = `SELECT Members.Email, Members.username, ChatMembers.ChatId
                     FROM ChatMembers
@@ -92,7 +85,7 @@ let isStringProvided = validation.isStringProvided
     pool.query(query, values)
         .then(result => {
             response.send({
-                memberid: request.params.memberid,
+                memberid: request.decoded.memberid,
                 rowCount : result.rowCount,
                 rows: result.rows
             })

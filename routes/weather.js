@@ -9,17 +9,14 @@ const request = require('request')
 var router = express.Router()
 
 /**
- * @api {get} /phish/blog/get Request a list of Phish.net Blogs
- * @apiName GetPhishBlogGet
- * @apiGroup Phish
+ * @api {get} /weather Request a list of Phish.net Blogs
+ * @apiName GetWeather
+ * @apiGroup Weather
  * 
  * @apiHeader {String} authorization JWT provided from Auth get
  * 
- * @apiDescription This end point is a pass through to the Phish.net API. 
- * All parameters will pass on to https://api.phish.net/v3/blog/get.
- * See the <a href="https://phishnet.api-docs.io/v3/blog/blog-get">Phish.net documentation</a>
- * for a list of optional paramerters and expected results. You do not need a 
- * Phish.net api key with this endpoint. Enjoy!
+ * @apiDescription This end point is a pass through to the OpenWeather API. 
+ * 
  */ 
  router.get("/", (req, res) => {
     var lat = 47.252876

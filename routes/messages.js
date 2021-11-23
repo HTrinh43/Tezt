@@ -149,7 +149,7 @@ router.post("/", (request, response, next) => {
 
 /**
  * @api {get} /messages/latest/:messageId? Request to get chat messages 
- * @apiName GetMessages
+ * @apiName GetLatestMessages
  * @apiGroup Messages
  * 
  * @apiDescription Request to get the 15 most recent chat messages from other people
@@ -192,7 +192,6 @@ router.post("/", (request, response, next) => {
     pool.query(query, values)
         .then(result => {
             response.send({
-                chatId: request.params.chatId,
                 rowCount : result.rowCount,
                 rows: result.rows
             })

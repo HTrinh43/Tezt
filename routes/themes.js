@@ -25,12 +25,12 @@ const config = {
  * @apiSuccess {String} theme the user's theme
  */
  router.get("/", (request, response) => {
-    let insert = `SELECT Theme FROM Members WHERE MemberId = $1;`
+    let pool = `SELECT Theme FROM Members WHERE MemberId = $1;`
     let values = [request.decoded.memberid]
-    pool.query(insert, values)
+    pool.query(pool, values)
         .then(result => {
             response.send({
-                success: true,
+                theme: result.rows
             })
         }).catch(err => {
             response.status(400).send({

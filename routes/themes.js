@@ -23,28 +23,31 @@ const config = {
  *
  * @apiSuccess {String} theme the user's theme
  */
- router.get("/", (request, response) => {
-     //validate memberid exists in the chat
-     let query = `SELECT * FROM Member WHERE MemberId=$1`
-     let values = [request.decoded.memberid]
- 
-     pool.query(query, values)
-         .then(result => {
-             if (result.rowCount > 0) {
+ router.get("/", (request, response, next) => {
+    //validate memberid exists in the chat
+    let query = `SELECT * FROM Members WHERE MemberId = $1`
+    let values = [request.decoded.memberid]
+    console.log(request.decoded.memberid)
+    pool.query(query, values)
+        .then(result => {
+            console.log("do we");
+            console.log(result.rowCount);
+            if (result.rowCount > 0) {
                  next()
-             } else {
-                 response.status(400).send({
-                     message: "user not in chat"
-                 })
-             }
-         }).catch(error => {
-             response.status(400).send({
-                 message: "SQL Error on member in chat check",
-                 error: error
-             })
-         })
+            } else {
+                response.status(400).send({
+                    message: "user doesn't exist"
+                })
+            }            
+        }).catch(error => {
+            console.log(request.decoded.memberid);
+            response.status(400).send({
+                message: "SQL Error on member in member check.",
+                error: error
+            })
+        })
 
-}, (request, response, next) => {
+}, (request, response) => {
     let query = `SELECT Theme FROM Members WHERE MemberId = $1;`
     let values = [request.decoded.memberid]
     pool.query(query, values)

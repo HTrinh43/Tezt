@@ -45,55 +45,44 @@ const config = {
  * 
  */ 
  router.get('/', (request, response, next) => {
-     console.log("Did verify even start?")
     if (isStringProvided(request.query.id)) {
         next()
     } else {
-        //this is a Web page so set the content-type to HTML
-        response.writeHead(400, {'Content-Type': 'text/html'});
-        //write a response to the client
-        response.write('<h style="color:blue">Missing id query parameter</h>'); 
-        response.end(); //end the response
+        console.log(error)
+        response.status(400).send({
+            message: "Missing id query parameter"
+        })
     }
 }, (request, response) => {
-    console.log("Did we get to decoding?")
     const token = request.query.id;
     try {
         jwt.verify(token, config.secret, (error, decoded) => {
             if (error) {
                 console.log(error)
-                //this is a Web page so set the content-type to HTML
-                response.writeHead(403, {'Content-Type': 'text/html'});
-                //write a response to the client
-                response.write('<h style="color:blue">Token is incorrect</h>'); 
-                response.end(); //end the response
-                return response.sendStatus(403)
+                response.status(403).send({
+                    message: "Token is incorrect"
+                })
             } else {
                 const email = decoded.email;
-                console.log("did we get to the database")
-                //let theQuery = `UPDATE Members SET verification = 1 WHERE email ='${email}';`
                 let theQuery = "UPDATE members SET verification = 1 WHERE email= $1"
                 let values = [email]
                 console.log(theQuery)
                 pool.query(theQuery, values)
                     .then(result => {
-                        response.status(201).send({
-                            success: true,
-                            message: 'Verification successful!'
-                        })
-                        //this is a Web page so set the content-type to HTML
+                        // response.status(201).send({
+                        //     success: true,
+                        //     message: 'Verification successful!'
+                        // })
                         response.status(201).writeHead(200, {'Content-Type': 'text/html'});
-                        //write a response to the client
-                        response.write('<h style="color:blue">Missing id query parameter</h>'); 
+                        response.write('<h style="color:blue">Congratulations! Your email has been registered.' +
+                        'You may now exit the page and enjoy the app!</h>'); 
                         response.end(); //end the response
-                        console.log("success?")
                     })
                     .catch((error) => {
                         console.log(error)
                         response.status(400).send({
                             message: "Verification failed"
                         })
-                        console.log("Something's wrong")
                     })
             }
         });

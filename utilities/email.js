@@ -19,7 +19,7 @@ let sendEmail = (sender, receiver, subject, token) => {
     const nodemailer = require("nodemailer")
     const app = express();
     const jwt = require('jsonwebtoken')
-    
+
     //const nodemailer = require("nodemailer")
     const PASSWORD = process.env.EMAIL_PASSWORD
     //const logger = require('logger')
@@ -34,16 +34,31 @@ let sendEmail = (sender, receiver, subject, token) => {
         from: sender,
         to: receiver,
         subject: subject,
-        html: `<h1>Welcome to our chat app!</h1>
+        html: `<html>
+  <body>    
+  <div id="wrapper">
+      <section>
+          <body>
+              <div id="body-wrapper">
+                  <h1>Welcome to our chat app!</h1>
             <p>Please press the button below to verify your email address.</p>
-            <a href=https://tcss450-group4-project.herokuapp.com/verify?id=${token}>
-                Verify Email Address</a>
+            <form action="https://tcss450-group4-project.herokuapp.com/verify?" method="get">
+                <input type="hidden" name="id" id="token" value="${token}">
+                <button type="submit">Verify your email</button>
+            </form>
             <p>If you did not create an account, no further action is required.</p>
-            <p>Best regards,</p>
-            <p>Team 4</p>`
+            <br><br>
+                  <p> Best regards,<br>
+                  Team 4
+          </div>
+          </body>
+      </section>
+  </div>
+  </body>
+  </html>`
 
         };
-    
+
     transporter.sendMail(mailOptions, function(error, info) {
         if (error) {
             console.log(error);

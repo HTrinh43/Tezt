@@ -1,42 +1,32 @@
---removing all
-DELETE FROM Contacts;
-
 INSERT INTO 
     Contacts(memberid_a, memberid_b, verified)
 VALUES
-    (29, 30, 1);
-
+    (29, 9, 1);
 INSERT INTO 
     Contacts(memberid_a, memberid_b, verified)
 VALUES
-    (29, 31, 1);
+    (29, 6, 1);
 INSERT INTO 
     Contacts(memberid_a, memberid_b, verified)
 VALUES
-    (29, 54, 0);
+    (29, 74, 0);
 INSERT INTO 
     Contacts(memberid_a, memberid_b, verified)
 VALUES
-    (55, 29, 1);
+    (29, 57, 1);
 INSERT INTO 
     Contacts(memberid_a, memberid_b, verified)
 VALUES
-    (29, 30, 1);
+    (29, 43, 0);
 INSERT INTO 
     Contacts(memberid_a, memberid_b, verified)
 VALUES
-    (29, 31, 0);
+    (29, 44, 1);
 INSERT INTO 
     Contacts(memberid_a, memberid_b, verified)
 VALUES
-    (29, 54, 1);
+    (29, 32, 1);
 INSERT INTO 
     Contacts(memberid_a, memberid_b, verified)
 VALUES
-    (30, 29, 1);
-INSERT INTO 
-    Contacts(memberid_a, memberid_b, verified)
-VALUES
-    (31, 29, 0);
-INSERT INTO 
-    Contacts(memberid_a, memberid_b, verified)
+    (45, 29, 0);

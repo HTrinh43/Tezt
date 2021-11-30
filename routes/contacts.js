@@ -154,7 +154,52 @@ router.post("/", (request, response) => {
         })
 })      
 
+/**
+ * @api {get} /contacts/search:keyword Request to get all emails similar to the keyword.
+ * @apiName GetSearchContacts
+ * @apiGroup Contacts
+ * 
+ * @apiDescription Request to get all emails similar to the keyword.
+ * 
+ * @apiParam {String} [keyword] the keyword being searched.
+ * 
+ * @apiSuccess {boolean} success true when the search is completed.
+ * @apiSuccess {Object[]} names List of users in the Members DB that match the searc.
+ * 
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * @apiError (400: Missing Keyword) {String} message "Missing required information"
+ * 
+ * @apiUse JSONError
+ */ 
+ router.get("/search/:keyword", (request, response, next) => {
+    console.log(request.params.keyword);
+    if (request.params.keyword === undefined) {
+        response.status(400).send({
+            message: "Missing required information"
+        })
+    } else {
+        next()
+    }
+}, (request, response) => {
+    const theQuery = `SELECT Members.email From Members WHERE Email LIKE '%$1%';`
+    let values = [request.params.keyword]
+    console.log(theQuery);
 
+    pool.query(theQuery, values)
+        .then(result => {
+            response.send({
+                success: true,
+                contacts: result.rows
+            })
+
+        }).catch(err => {
+            //log the error
+            // console.log(err.details)
+            response.status(400).send({
+                message: err.detail
+            })
+        })
+})
 /**
  * @api {put} /contacts Request to update contact verification and name
  * @apiName PutContacts

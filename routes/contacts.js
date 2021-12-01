@@ -181,8 +181,10 @@ router.post("/", (request, response) => {
         next()
     }
 }, (request, response) => {
-    const theQuery = `SELECT Members.email From Members WHERE Email LIKE '%$1%';`
-    let values = [request.params.keyword]
+    let keyword = "%" + request.params.keyword + "%"
+    console.log(keyword)
+    const theQuery = "SELECT Members.Email From Members WHERE Email LIKE $1"
+    let values = [keyword]
     console.log(theQuery);
 
     pool.query(theQuery, values)

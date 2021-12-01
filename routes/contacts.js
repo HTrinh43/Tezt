@@ -181,7 +181,7 @@ router.post("/", (request, response) => {
         next()
     }
 }, (request, response) => {
-    let keyword = "%" + request.params.keyword + "%"
+    let keyword = request.params.keyword + "%"
     console.log(keyword)
     const theQuery = "SELECT Members.Email From Members WHERE Email LIKE $1"
     let values = [keyword]

@@ -88,7 +88,6 @@ router.post("/", (request, response) => {
  * @apiSuccess {String} contacts.verified The verification status of contact
  * 
  * @apiError (404: ID Not Found) {String} message "ID not found"
-
  * @apiError (400: SQL Error) {String} message the reported SQL error details
  * @apiError (400: Missing User ID) {String} message "Missing User ID"
  * 
@@ -181,8 +180,10 @@ router.post("/", (request, response) => {
         next()
     }
 }, (request, response) => {
-    const theQuery = `SELECT Members.email From Members WHERE Email LIKE '%$1%';`
-    let values = [request.params.keyword]
+    let keyword = request.params.keyword + "%"
+    console.log(keyword)
+    const theQuery = "SELECT Members.Email From Members WHERE Email LIKE $1"
+    let values = [keyword]
     console.log(theQuery);
 
     pool.query(theQuery, values)
@@ -316,5 +317,3 @@ router.delete("/:user_contact?", (request, response) => {
         })
     } 
 })
-
-module.exports = router

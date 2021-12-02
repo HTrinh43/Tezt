@@ -37,7 +37,7 @@ let isStringProvided = validation.isStringProvided
  * 
  * @apiUse JSONError
  */ 
-router.post("/", (request, response) => {
+router.post("/", (request, response, next) => {
     if (isStringProvided(request.body.user) && isStringProvided(request.body.contact)) {
         //Inserting user_a = sender and user_b = receiver
         const theQuery = "INSERT INTO CONTACTS(memberid_a, memberid_b) VALUES ($1, $2) RETURNING *"
@@ -45,10 +45,9 @@ router.post("/", (request, response) => {
 
         pool.query(theQuery, values)
             .then(result => {
-                response.status(201).send({
-                    success: true,
-                    message: "Inserted: " + result.rows[0].name
-                })
+
+               console.log("got here")
+               next()
             })
             .catch(err => {
                 //log the error
@@ -68,9 +67,32 @@ router.post("/", (request, response) => {
         response.status(400).send({
             message: "Missing required information"
         })
-
-    }  
-})
+    }
+    
+    }, (request, response)  => {
+        const theQuery = "INSERT INTO CONTACTS(memberid_b, memberid_a) VALUES ($1, $2) RETURNING *"
+        const values = [request.body.user, request.body.contact]
+        pool.query(theQuery, values)
+            .then(result => {
+                response.status(201).send({
+                    success: true,
+                    message: "Inserted: " + result.rows
+                })
+            })
+            .catch(err => {
+                //log the error
+                console.log(err)
+                if (err.constraint == "contact_name_key") {
+                    response.status(400).send({
+                        message: "Name exists"
+                    })
+                } else {
+                    response.status(400).send({
+                        message: err.detail
+                    })
+                }
+            }) 
+    })
 
 
 /**
@@ -223,7 +245,7 @@ router.post("/", (request, response) => {
  * 
  * @apiUse JSONError
  */ 
-router.put("/", (request, response) => {
+router.put("/", (request, response, next) => {
 
     if (isStringProvided(request.body.verification) && isStringProvided(request.body.contact) && isStringProvided(request.body.user)) {
         const theQuery = "UPDATE Contacts SET verified = $1 WHERE memberid_b = $2 AND memberid_a = $3 RETURNING *"
@@ -232,10 +254,8 @@ router.put("/", (request, response) => {
         pool.query(theQuery, values)
             .then(result => {
                 if (result.rowCount > 0) {
-                    response.send({
-                        success: true,
-                        message: "Updated user ID " + result.rows[0].memberid_a + " contact ID " + result.rows[0].memberid_b + " to verification status " + result.rows[0].verified
-                    })
+                    next()
+
                 } else {
                     response.status(404).send({
                         message: "Contact info not found"
@@ -254,6 +274,29 @@ router.put("/", (request, response) => {
             message: "Missing required information"
         })
     } 
+}, (request, response) => {
+    const theQuery = "UPDATE Contacts SET verified = $1 WHERE memberid_b = $3 AND memberid_a = $2 RETURNING *"
+    const values = [request.body.verification, request.body.contact, request.body.user]
+    pool.query(theQuery, values)
+            .then(result => {
+                if (result.rowCount > 0) {
+                    response.send({
+                        success: true,
+                        message: "Updated user ID " + result.rows[0].memberid_b + " contact ID " + result.rows[0].memberid_a + " to verification status " + result.rows[0].verified
+                    })
+                } else {
+                    response.status(404).send({
+                        message: "Contact info not found"
+                    })
+                }
+            })
+            .catch(err => {
+                //log the error
+                // console.log(err)
+                response.status(400).send({
+                    message: err.detail
+                })
+            }) 
 })
 
 /**
@@ -277,7 +320,7 @@ router.put("/", (request, response) => {
  * 
  * @apiUse JSONError
  */ 
-router.delete("/:user_contact?", (request, response) => {
+router.delete("/:user_contact?", (request, response, next) => {
     const user = request.params.user_contact.split('_')[0]
     const contact = request.params.user_contact.split('_')[1]
 
@@ -290,10 +333,7 @@ router.delete("/:user_contact?", (request, response) => {
         pool.query(theQuery)
             .then(result => {
                 if (result.rowCount == 1) {
-                    response.send({
-                        success: true,
-                        message: "Deleted Contact: " + contact + " from user " + user
-                    })
+                    next()
                 } else {
                     response.status(404).send({
                         message: "User and associated contact not found"
@@ -316,4 +356,33 @@ router.delete("/:user_contact?", (request, response) => {
             message: "Missing required information"
         })
     } 
+}, (request, response) => {
+    const user = request.params.user_contact.split('_')[0]
+    const contact = request.params.user_contact.split('_')[1]
+    const theQuery = "DELETE FROM Contacts WHERE memberid_a=" + contact + " AND " + "memberid_b="+user + " RETURNING *"
+    console.log(theQuery)
+    const values = [request.params.user_contact]
+
+    pool.query(theQuery)
+        .then(result => {
+            if (result.rowCount == 1) {
+                response.send({
+                    success: true,
+                    message: "Deleted Contact: " + contact + " from user " + user
+                })
+            } else {
+                response.status(404).send({
+                    message: "SECOND -- User and associated contact not found"
+                })
+            }
+        })
+        .catch(err => {
+            //log the error
+            // console.log(err)
+            response.status(400).send({
+                message: err.detail
+            })
+        }) 
 })
+
+module.exports = router

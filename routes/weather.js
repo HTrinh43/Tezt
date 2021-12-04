@@ -22,11 +22,11 @@ var router = express.Router()
     var lat = 91
     var lon = 181
     var cityName = ""
-    res.type("application/json");
-    console.log(req.body.zip);
+    // res.type("application/json");
+    console.log(JSON.stringify(req.headers));
     //if the request include a zip code
-    if (req.body.zip && req.body.zip.length === 5){
-        var zipcode = req.body.zip;
+    if (req.headers.zip && req.headers.zip.length === 5){
+        var zipcode = req.headers.zip;
         let googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=zipcode" + zipcode + "&key=" +
         GOOGLE_KEY;
         console.log("googleUrl");
@@ -55,10 +55,10 @@ var router = express.Router()
     }
 
     //if request contains lon and lat
-    else if (req.body.latitude && req.body.longitude) {
-        let coords = req.body.latitude + "," + req.body.longitude;
-        lat = req.body.latitude;
-        lon = req.body.longitude;
+    else if (req.headers.latitude && req.headers.longitude) {
+        let coords = req.headers.latitude + "," + req.headers.longitude;
+        lat = req.headers.latitude;
+        lon = req.headers.longitude;
         let googleUrl = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + coords + "&key=" +
         GOOGLE_KEY;
         console.log("googleUrl");

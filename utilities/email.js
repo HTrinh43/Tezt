@@ -1,3 +1,54 @@
+let sendRecoveryEmail = (sender, receiver, subject, code) => {
+    const express = require("express")
+    const bodyParser = require('body-parser')
+    const nodemailer = require("nodemailer")
+    const app = express();
+    const jwt = require('jsonwebtoken')
+
+    //const nodemailer = require("nodemailer")
+    const PASSWORD = process.env.EMAIL_PASSWORD
+    //const logger = require('logger')
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: sender,
+            pass: PASSWORD
+        }
+    });
+    var mailOptions = {
+        from: sender,
+        to: receiver,
+        subject: subject,
+        html: `<html>
+  <body>    
+  <div id="wrapper">
+      <section>
+          <body>
+              <div id="body-wrapper">
+                  <h1>We have received notice that you have forgotten your password!</h1>
+            <p>Please use the following six digit code to reset your password: ${code}</p>
+            
+            <p>If you did not forget your password, no further action is required.</p>
+            <br><br>
+                  <p> Best regards,<br>
+                  Team 4
+          </div>
+          </body>
+      </section>
+  </div>
+  </body>
+  </html>`
+
+        };
+
+    transporter.sendMail(mailOptions, function(error, info) {
+        if (error) {
+            console.log(error);
+        } else {
+            console.log('Email sent: ' + info.response);
+        }
+    });
+}
 /**
  * Sends a verification email.
  * @param {} sender the account sending the email.
@@ -69,5 +120,5 @@ let sendEmail = (sender, receiver, subject, token) => {
 }
 
 module.exports = { 
-    sendEmail
+    sendEmail, sendRecoveryEmail
 }

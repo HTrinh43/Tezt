@@ -80,7 +80,7 @@ router.post('/', (request, response, next) => {
     //let theQuery = "SELECT * FROM Members WHERE Email = $1"
     //let theQuery = "INSERT INTO MEMBERS(FirstName, LastName, Username, Email, Password, Salt) VALUES ($1, $2, $3, $4, $5, $6) RETURNING Email"
     let code = Math.floor(Math.random() * 1000000)
-    code.padStart(6, '0')
+    code.toString().padStart(6, '0')
     let salted_hash = generateHash(code, response.locals.salt)
     console.log(response.locals.salt)
     let email = request.body.email

@@ -7,7 +7,7 @@ const validation = require('../utilities').validation
 let isStringProvided = validation.isStringProvided
 
 const generateHash = require('../utilities').generateHash
-
+const generateSalt = require('../utilities').generateSalt
 const sendRecoveryEmail = require('../utilities').sendRecoveryEmail
 
 const router = express.Router()
@@ -80,6 +80,7 @@ router.post('/', (request, response, next) => {
     //let theQuery = "SELECT * FROM Members WHERE Email = $1"
     //let theQuery = "INSERT INTO MEMBERS(FirstName, LastName, Username, Email, Password, Salt) VALUES ($1, $2, $3, $4, $5, $6) RETURNING Email"
     let code = Math.floor(Math.random() * 1000000)
+    code.padStart(6, '0')
     let salted_hash = generateHash(code, response.locals.salt)
     console.log(response.locals.salt)
     let email = request.body.email
@@ -212,6 +213,76 @@ router.post('/', (request, response, next) => {
                 message: err.detail
             })
         })
+})
+
+/**
+ * @api {post} /auth Request to register a user
+ * @apiName PostAuth
+ * @apiGroup Auth
+ * 
+ * @apiParam {String} first a users first name
+ * @apiParam {String} last a users last name
+ * @apiParam {String} email a users email *unique
+ * @apiParam {String} password a users password
+ * @apiParam {String} [username] a username *unique, if none provided, email will be used
+ * 
+ * @apiParamExample {json} Request-Body-Example:
+ *  {
+ *      "email":"cfb3@fake.email",
+ *      "password":"test12345"
+ *  }
+ * 
+ * @apiSuccess (Success 201) {boolean} success true when the name is inserted
+ * @apiSuccess (Success 201) {String} email the email of the user inserted 
+ * 
+ * @apiError (400: Missing Parameters) {String} message "Missing required information"
+ * 
+ * @apiError (400: Username exists) {String} message "Username exists"
+ * 
+ * @apiError (400: Email exists) {String} message "Email exists"
+ *  
+ * @apiError (400: Other Error) {String} message "Other error, see detail"
+ * @apiError (400: Other Error) {String} detail Information about the error
+ * 
+ */ 
+ router.post('/change', (request, response) => {
+    //Retrieve data from query params
+    const email = request.body.email
+    const password = request.body.password
+    //Verify that the caller supplied all the parameters
+    //In js, empty strings or null values evaluate to false
+    if(isStringProvided(email) 
+        && isStringProvided(password)) {
+        //We're storing salted hashes to make our application more secure
+        //If you're interested as to what that is, and why we should use it
+        //watch this youtube video: https://www.youtube.com/watch?v=8ZtInClXe1Q
+        let salt = generateSalt(32)
+        let salted_hash = generateHash(password, salt)
+        
+        //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
+        //If you want to read more: https://stackoverflow.com/a/8265319
+        let theQuery = "UPDATE Members SET Password = $1, Salt = $2 WHERE Email = $3"
+        let values = [salted_hash, salt, email]
+        pool.query(theQuery, values)
+            .then(result => {
+                response.status(201).send({
+                    success: true,
+                    email: email
+                })
+            })
+            .catch((error) => {
+                //log the error
+                 console.log(error)
+                response.status(400).send({
+                    message: "Other error, see detail",
+                    detail: error.detail
+                })
+            })
+    } else {
+        response.status(400).send({
+            message: "Missing required information"
+        })
+    }
 })
 
 module.exports = router

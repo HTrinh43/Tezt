@@ -5,6 +5,7 @@ const express = require('express')
 const pool = require('../utilities/exports').pool
 
 const router = express.Router()
+const msg_functions = require('../utilities/exports').messaging
 
 const validation = require('../utilities').validation
 let isStringProvided = validation.isStringProvided
@@ -45,10 +46,10 @@ router.post("/", (request, response, next) => {
     }
 }, (request, response) => {
 
-    let insert = `INSERT INTO Chats(Name)
-                  VALUES ($1)
+    let insert = `INSERT INTO Chats(Name, Owner)
+                  VALUES ($1, $2)
                   RETURNING ChatId`
-    let values = [request.body.name]
+    let values = [request.body.name, request.decoded.memberid]
     pool.query(insert, values)
         .then(result => {
             response.send({
@@ -165,25 +166,25 @@ console.log(request.decoded)
                 })
             })
 
-}, (request, response) => {
-    //Insert the memberId into the chat
-    let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
-                  VALUES ($1, $2)
-                  RETURNING *`
-    let values = [request.params.chatId, request.decoded.memberid]
-    pool.query(insert, values)
-        .then(result => {
-            response.send({
-                success: true
-            })
-        }).catch(err => {
-            response.status(400).send({
-                message: "SQL Error",
-                error: err
-            })
-        })
-    }
-)
+        }, (request, response) => {
+            //Insert the memberId into the chat
+            let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
+                          VALUES ($1, $2)
+                          RETURNING *`
+            let values = [request.params.chatId, request.decoded.memberid]
+            pool.query(insert, values)
+                .then(result => {
+                    response.send({
+                        success: true
+                    })
+                }).catch(err => {
+                    response.status(400).send({
+                        message: "SQL Error",
+                        error: err
+                    })
+                })
+            }
+        )
 
 /**
  * @api {get} /chats/:chatId? Request to get the emails of user in a chat

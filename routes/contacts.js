@@ -6,6 +6,7 @@ var router = express.Router()
 //Access the connection to Heroku Database
 const pool = require('../utilities/exports').pool
 
+const msg_functions = require('../utilities/exports').messaging
 
 const validation = require('../utilities/exports').validation
 let isStringProvided = validation.isStringProvided
@@ -38,16 +39,26 @@ let isStringProvided = validation.isStringProvided
  * @apiUse JSONError
  */ 
 router.post("/", (request, response, next) => {
-    if (isStringProvided(request.body.user) && isStringProvided(request.body.contact)) {
-        //Inserting user_a = sender and user_b = receiver
-        const theQuery = "INSERT INTO CONTACTS(memberid_a, memberid_b) VALUES ($1, $2) RETURNING *"
-        const values = [request.body.user, request.body.contact]
+    if (isStringProvided(request.body.contact)) {
+        const theQuery = "(SELECT Memberid FROM Members WHERE Email=$1) " +
+            "UNION (SELECT Memberid FROM Members WHERE Email=$2)"
+        const values = [request.decoded.email, request.body.contact]
 
         pool.query(theQuery, values)
             .then(result => {
+                if (typeof result.rows[1] !== 'undefined') {
+                    response.locals.user = result.rows[0].memberid
+                    response.locals.contact = result.rows[1].memberid
+                    console.log(result.rows[0].memberid)
+                    console.log(result.rows[1].memberid)
+                    console.log("got here")
+                    next()
+                } else {
+                    response.status(400).send({
+                        message: "contact does not exist"
+                    })
+                }
 
-               console.log("got here")
-               next()
             })
             .catch(err => {
                 //log the error
@@ -68,12 +79,38 @@ router.post("/", (request, response, next) => {
             message: "Missing required information"
         })
     }
-    
-    }, (request, response)  => {
-        const theQuery = "INSERT INTO CONTACTS(memberid_b, memberid_a) VALUES ($1, $2) RETURNING *"
-        const values = [request.body.user, request.body.contact]
+        
+}, (request, response, next)  => {
+        //Inserting user_a = sender and user_b = receiver
+        const theQuery = "INSERT INTO CONTACTS(memberid_a, memberid_b) VALUES ($1, $2) RETURNING *"
+        const values = [response.locals.user, response.locals.contact]
+
         pool.query(theQuery, values)
             .then(result => {
+
+               console.log("got here")
+               next()
+            })
+            .catch(err => {
+                //log the error
+                console.log(err)
+                if (err.constraint == "contact_name_key") {
+                    response.status(400).send({
+                        message: "Name exists"
+                    })
+                } else {
+                    response.status(400).send({
+                        message: err.detail
+                    })
+                }
+            }) 
+}, (request, response)  => {
+        const theQuery = "INSERT INTO CONTACTS(memberid_b, memberid_a) VALUES ($1, $2) RETURNING *"
+        const values = [response.locals.user, response.locals.contact]
+        pool.query(theQuery, values)
+            .then(result => {
+                response.message = result.rows
+                //next()
                 response.status(201).send({
                     success: true,
                     message: "Inserted: " + result.rows
@@ -92,8 +129,7 @@ router.post("/", (request, response, next) => {
                     })
                 }
             }) 
-    })
-
+})
 
 /**
  * @api {get} /contacts/:name? Request to get all contact entries in the DB
@@ -250,7 +286,7 @@ router.put("/", (request, response, next) => {
     if (isStringProvided(request.body.verification) && isStringProvided(request.body.contact) && isStringProvided(request.body.user)) {
         const theQuery = "UPDATE Contacts SET verified = $1 WHERE memberid_b = $2 AND memberid_a = $3 RETURNING *"
         const values = [request.body.verification, request.body.contact, request.body.user]
-        console.log(theQuery)
+        console.log(theQuery)   
         pool.query(theQuery, values)
             .then(result => {
                 if (result.rowCount > 0) {

@@ -84,7 +84,7 @@ let isStringProvided = validation.isStringProvided
     let values = [request.decoded.memberid]
     pool.query(query, values)
         .then(result => {
-            response.send({
+            response.status(201).send({
                 memberid: request.decoded.memberid,
                 rowCount : result.rowCount,
                 rows: result.rows
@@ -96,4 +96,41 @@ let isStringProvided = validation.isStringProvided
             })
         })
 });
+
+router.delete("/", (request, response, next) => {
+    if (isStringProvided(request.body.chatid)) {
+        let theQuery = "DELETE FROM ChatMembers Where Chatid = $1"
+        let values = [request.body.chatid]
+        pool.query(theQuery, values)
+            .then(result => {
+                next()
+            }).catch(err => {
+                console.log(err)
+                response.status(400).send({
+                    message: "SQL Error",
+                    error: err
+                })
+            })
+    } else {
+        response.status(400).send({
+            message: "Missing values"
+        })
+    }
+}, (request, response) => {
+    let theQuery = "DELETE FROM Chats WHERE chatid = $1"
+        let values = [request.body.chatid]
+    pool.query(theQuery, values)
+            .then(result => {
+                response.status(201).send({
+                    success:true
+                })
+            }).catch(err => {
+                console.log(err)
+                response.status(400).send({
+                    message: "SQL Error",
+                    error: err
+                })
+            })
+})
+
 module.exports = router

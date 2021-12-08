@@ -44,24 +44,56 @@ router.post("/", (request, response, next) => {
     } else {
         next()
     }
-}, (request, response) => {
+}, (request, response, next) => {
+    const theQuery = "SELECT Memberid FROM Members WHERE Email=$1"
+    const values = [request.decoded.email]
+    pool.query(theQuery, values)
+        .then(result => {
+            response.locals.user = result.rows[0].memberid
+            next()
+        })
+        .catch(err => {
+            console.log(err)
+            response.status(400).send({
+                message: err.detail
+            })
+        })
+}, (request, response, next) => {
 
-    let insert = `INSERT INTO Chats(Name, Owner)
+    const theQuery = `INSERT INTO Chats(Name, Owner)
                   VALUES ($1, $2)
                   RETURNING ChatId`
-    let values = [request.body.name, request.decoded.memberid]
-    pool.query(insert, values)
+    const values = [request.body.name, request.decoded.memberid]
+    pool.query(theQuery, values)
         .then(result => {
-            response.send({
-                success: true,
-                chatID:result.rows[0].chatid
-            })
+            response.locals.chatid = result.rows[0].chatid
+            next()
+            // response.send({
+            //     success: true,
+            //     chatID:result.rows[0].chatid
+            // })
         }).catch(err => {
             response.status(400).send({
                 message: "SQL Error",
                 error: err
             })
 
+        })
+}, (request, response) => {
+    const theQuery = `INSERT INTO ChatMembers(Chatid, Memberid)
+                    VALUES ($1, $2) RETURNING ChatId`
+    const values = [response.locals.chatid, response.locals.user]
+    pool.query(theQuery, values)
+        .then(result => {
+            response.send({
+                success: true,
+                chatID:result.rows[0].chatid,
+                name:result.rows[0].name
+            })
+        }).catch(err => {
+            response.status(400).send({
+                error: err
+            })
         })
 })
 
@@ -70,11 +102,12 @@ router.post("/", (request, response, next) => {
  * @apiName PutChats
  * @apiGroup Chats
  * 
- * @apiDescription Adds the user associated with the required JWT. 
+ * @apiDescription Adds the user associated with the required email. 
  * 
  * @apiHeader {String} authorization Valid JSON Web Token JWT
  * 
  * @apiParam {Number} chatId the chat to add the user to
+ * @apiParam {String} email the email of the user
  * 
  * @apiSuccess {boolean} success true when the name is inserted
  * 
@@ -88,9 +121,9 @@ router.post("/", (request, response, next) => {
  * 
  * @apiUse JSONError
  */ 
-router.put("/:chatId/", (request, response, next) => {
+router.put("/:chatId/:email", (request, response, next) => {
     //validate on empty parameters
-    if (!request.params.chatId) {
+    if (!request.params.chatId || !request.params.email) {
         response.status(400).send({
             message: "Missing required information"
         })
@@ -124,8 +157,8 @@ router.put("/:chatId/", (request, response, next) => {
         //code here based on the results of the query
 }, (request, response, next) => {
     //validate email exists 
-    let query = 'SELECT * FROM Members WHERE MemberId=$1'
-    let values = [request.decoded.memberid]
+    let query = 'SELECT * FROM Members WHERE Email=$1'
+    let values = [request.params.email]
 
 console.log(request.decoded)
 
@@ -137,6 +170,7 @@ console.log(request.decoded)
                 })
             } else {
                 //user found
+                response.locals.user = result.rows[0].memberid
                 next()
             }
         }).catch(error => {
@@ -148,7 +182,7 @@ console.log(request.decoded)
 }, (request, response, next) => {
         //validate email does not already exist in the chat
         let query = 'SELECT * FROM ChatMembers WHERE ChatId=$1 AND MemberId=$2'
-        let values = [request.params.chatId, request.decoded.memberid]
+        let values = [request.params.chatId, response.locals.user]
     
         pool.query(query, values)
             .then(result => {
@@ -166,25 +200,50 @@ console.log(request.decoded)
                 })
             })
 
-        }, (request, response) => {
-            //Insert the memberId into the chat
-            let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
-                          VALUES ($1, $2)
-                          RETURNING *`
-            let values = [request.params.chatId, request.decoded.memberid]
-            pool.query(insert, values)
-                .then(result => {
-                    response.send({
-                        success: true
-                    })
-                }).catch(err => {
-                    response.status(400).send({
-                        message: "SQL Error",
-                        error: err
-                    })
+}, (request, response, next) => {
+    //Insert the memberId into the chat
+    let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
+                  VALUES ($1, $2)
+                  RETURNING *`
+    let values = [request.params.chatId, response.locals.user]
+    pool.query(insert, values)
+        .then(result => {
+            next()
+            // response.send({
+            //     success: true
+            // })
+        }).catch(err => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: err
+            })
+        })
+}, (request, response) => {
+    // send a notification of this message to ALL members with registered tokens
+        let query = `SELECT token FROM Push_Token
+                        INNER JOIN ChatMembers ON
+                        Push_Token.memberid=ChatMembers.memberid
+                        WHERE ChatMembers.chatId=$1`
+        let values = [request.params.chatId]
+        pool.query(query, values)
+            .then(result => {
+                console.log(request.decoded.email)
+                console.log(request.body.message)
+                result.rows.forEach(entry => 
+                    msg_functions.sendChatToIndividual(
+                        entry.token, 
+                        response.message))
+                response.send({
+                    success:true
                 })
-            }
-        )
+            }).catch(err => {
+
+                response.status(400).send({
+                    message: "SQL Error on select from push token",
+                    error: err
+                })
+            })
+})
 
 /**
  * @api {get} /chats/:chatId? Request to get the emails of user in a chat

@@ -27,8 +27,52 @@ function sendMessageToIndividual(token, message) {
     })
 }
 
-//add other "sendTypeToIndividual" functions here. Don't forget to export them
+//use to send contact to a specific client by the token
+function sendContactToIndividual(token, message) {
+
+    //build the message for Pushy to send
+    let data = {
+        "type": "contact",
+        "message": message
+    };
+
+    // Send push notification via the Send Notifications API
+    // https://pushy.me/docs/api/send-notifications
+    pushyAPI.sendPushNotification(data, token, {}, function (err, id) {
+        // Log errors to console
+        if (err) {
+            return console.log('Fatal Error', err);
+        }
+
+        // Log success
+        console.log('Push sent successfully! (ID: ' + id + ')');
+    })
+}
+
+//use to send chat to a specific client by the token
+function sendChatToIndividual(token, message) {
+
+    //build the message for Pushy to send
+    let data = {
+        "type": "chat",
+        "message": message
+    };
+
+    // Send push notification via the Send Notifications API
+    // https://pushy.me/docs/api/send-notifications
+    pushyAPI.sendPushNotification(data, token, {}, function (err, id) {
+        // Log errors to console
+        if (err) {
+            return console.log('Fatal Error', err);
+        }
+
+        // Log success
+        console.log('Push sent successfully! (ID: ' + id + ')');
+    })
+}
+
+//add other "sendYypeToIndividual" functions here. Don't forget to export them
 
 module.exports = {
-    sendMessageToIndividual
-}
+    sendMessageToIndividual, sendContactToIndividual, sendChatToIndividual
+};

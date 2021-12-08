@@ -356,65 +356,62 @@ router.put("/", (request, response, next) => {
  * 
  * @apiUse JSONError
  */ 
-router.delete("/:user_contact?", (request, response, next) => {
-    const user = request.params.user_contact.split('_')[0]
-    const contact = request.params.user_contact.split('_')[1]
+router.delete("/", (request, response, next) => {
+    if (isStringProvided(request.body.contact)) {
+        const theQuery = "(SELECT Memberid FROM Members WHERE Email=$1) " +
+            "UNION (SELECT Memberid FROM Members WHERE Email=$2)"
+        const values = [request.decoded.email, request.body.contact]
 
-    if (isStringProvided(request.params.user_contact) && !(user === undefined) && !(contact === undefined)) {
-        
-        const theQuery = "DELETE FROM Contacts WHERE memberid_a=" + user + " AND " + "memberid_b="+contact + " RETURNING *"
-        console.log(theQuery)
-        const values = [request.params.user_contact]
-
-        pool.query(theQuery)
+        pool.query(theQuery, values)
             .then(result => {
-                if (result.rowCount == 1) {
+                if (typeof result.rows[1] !== 'undefined') {
+                    response.locals.user = result.rows[0].memberid
+                    response.locals.contact = result.rows[1].memberid
+                    console.log(result.rows[0].memberid)
+                    console.log(result.rows[1].memberid)
+                    console.log("got here")
                     next()
                 } else {
-                    response.status(404).send({
-                        message: "User and associated contact not found"
+                    response.status(400).send({
+                        message: "contact does not exist"
                     })
                 }
+
             })
             .catch(err => {
                 //log the error
-                // console.log(err)
-                response.status(400).send({
-                    message: err.detail
-                })
-            }) 
-    } else if (user === undefined || contact === undefined) {
-        response.status(400).send({
-            message: "User and Contact must exist and have length greater than 0"
-        })
+                console.log(err)
+                    response.status(400).send({
+                        message: err.detail
+                    })
+            })
     } else {
         response.status(400).send({
             message: "Missing required information"
         })
-    } 
-}, (request, response) => {
-    const user = request.params.user_contact.split('_')[0]
-    const contact = request.params.user_contact.split('_')[1]
-    const theQuery = "DELETE FROM Contacts WHERE memberid_a=" + contact + " AND " + "memberid_b="+user + " RETURNING *"
-    console.log(theQuery)
-    const values = [request.params.user_contact]
+    }
+        
+}, (request, response)  => {
+        
+    const theQuery = "DELETE FROM Contacts WHERE (memberid_a=$1 AND memberid_b=$2) OR (memberid_a=$2 AND memberid_b=$1) RETURNING *"
+    const values = [response.locals.user, response.locals.contact]
 
-    pool.query(theQuery)
+    pool.query(theQuery, values)
         .then(result => {
-            if (result.rowCount == 1) {
+            if (result.rowCount == 2) {
                 response.send({
                     success: true,
-                    message: "Deleted Contact: " + contact + " from user " + user
+                    message: "Deleted Contact: " + response.locals.contact + " from user " + response.locals.user
                 })
             } else {
                 response.status(404).send({
-                    message: "SECOND -- User and associated contact not found"
+                    message: "User and associated contact not found"
                 })
             }
         })
         .catch(err => {
             //log the error
-            // console.log(err)
+            console.log(err)
             response.status(400).send({
                 message: err.detail
             })

@@ -282,57 +282,64 @@ router.post("/", (request, response, next) => {
  * @apiUse JSONError
  */ 
 router.put("/", (request, response, next) => {
+    if (isStringProvided(request.body.verification) && isStringProvided(request.body.contact)) {
+        const theQuery = "(SELECT Memberid FROM Members WHERE Email=$1) " +
+            "UNION (SELECT Memberid FROM Members WHERE Email=$2)"
+        const values = [request.decoded.email, request.body.contact]
 
-    if (isStringProvided(request.body.verification) && isStringProvided(request.body.contact) && isStringProvided(request.body.user)) {
-        const theQuery = "UPDATE Contacts SET verified = $1 WHERE memberid_b = $2 AND memberid_a = $3 RETURNING *"
-        const values = [request.body.verification, request.body.contact, request.body.user]
-        console.log(theQuery)   
         pool.query(theQuery, values)
             .then(result => {
-                if (result.rowCount > 0) {
+                if (typeof result.rows[1] !== 'undefined') {
+                    response.locals.user = result.rows[0].memberid
+                    response.locals.contact = result.rows[1].memberid
+                    console.log(result.rows[0].memberid)
+                    console.log(result.rows[1].memberid)
+                    console.log("got here")
                     next()
-
                 } else {
-                    response.status(404).send({
-                        message: "Contact info not found"
+                    response.status(400).send({
+                        message: "contact does not exist"
                     })
                 }
+
             })
             .catch(err => {
                 //log the error
-                // console.log(err)
-                response.status(400).send({
-                    message: err.detail
-                })
-            }) 
+                console.log(err)
+                    response.status(400).send({
+                        message: err.detail
+                    })
+            })
     } else {
         response.status(400).send({
             message: "Missing required information"
         })
-    } 
+    }
 }, (request, response) => {
-    const theQuery = "UPDATE Contacts SET verified = $1 WHERE memberid_b = $3 AND memberid_a = $2 RETURNING *"
-    const values = [request.body.verification, request.body.contact, request.body.user]
+    const theQuery = "UPDATE Contacts SET verified = $1 WHERE (memberid_b = $2 AND memberid_a = $3)" +
+    " OR (memberid_b = $3 AND memberid_a = $2) RETURNING *"
+    const values = [request.body.verification, response.locals.contact, response.locals.user]
+    console.log(theQuery)   
     pool.query(theQuery, values)
-            .then(result => {
-                if (result.rowCount > 0) {
-                    response.send({
-                        success: true,
-                        message: "Updated user ID " + result.rows[0].memberid_b + " contact ID " + result.rows[0].memberid_a + " to verification status " + result.rows[0].verified
-                    })
-                } else {
-                    response.status(404).send({
-                        message: "Contact info not found"
-                    })
-                }
-            })
-            .catch(err => {
-                //log the error
-                // console.log(err)
-                response.status(400).send({
-                    message: err.detail
+        .then(result => {
+            if (result.rowCount > 0) {
+                response.send({
+                    success: true,
+                    message: "Updated user ID " + result.rows[0].memberid_b + " contact ID " + result.rows[0].memberid_a + " to verification status " + result.rows[0].verified
                 })
-            }) 
+            } else {
+                response.status(404).send({
+                    message: "Contact info not found"
+                })
+            }
+        })
+        .catch(err => {
+            //log the error
+            // console.log(err)
+            response.status(400).send({
+                message: err.detail
+            })
+        }) 
 })
 
 /**

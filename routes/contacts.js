@@ -405,7 +405,7 @@ router.delete("/", (request, response, next) => {
 
     pool.query(theQuery, values)
         .then(result => {
-            if (result.rowCount == 2) {
+            if (result.rowCount >= 2) {
                 response.send({
                     success: true,
                     message: "Deleted Contact: " + response.locals.contact + " from user " + response.locals.user

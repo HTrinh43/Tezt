@@ -4,7 +4,9 @@ const GOOGLE_KEY = process.env.GOOGLE_API_KEY;
 const express = require('express')
 
 //request module is needed to make a request to a web service
-const request = require('request')
+const request = require('request');
+const pool = require('../utilities/sql_conn');
+const { isStringProvided } = require('../utilities/validationUtils');
 
 var router = express.Router()
 
@@ -143,5 +145,87 @@ function requestWeatherData(res, lat, lon, zip, cityName){
         }
     });
 }
+
+router.post("/", (request, response, next) => {
+    const theQuery = "SELECT Memberid FROM Members WHERE Email=$1"
+    const values = [request.decoded.email]
+    pool.query(theQuery, values)
+        .then(result => {
+            response.locals.user = result.rows[0].memberid
+            next()
+        })
+        .catch(err => {
+            console.log(err)
+            response.status(400).send({
+                message: err.detail
+            })
+        })
+}, (request, response) => {
+
+    if (isStringProvided(request.body.lat) && isStringProvided(request.body.long)) {
+        const theQuery = `INSERT INTO Locations(MemberId, Nickname, Lat, Long) 
+        VALUES ($1, $2, $3, $4)
+        RETURNING *`
+        const values = [response.locals.user, request.decoded.email, request.body.lat, request.body.long]
+
+        pool.query(theQuery, values)
+            .then(result => {
+                response.status(201).send({
+                    success: true,
+                    message: "Inserted: " + result.rows
+                })
+            })
+            .catch(err => {
+                //log the error
+                console.log(err)
+                    response.status(400).send({
+                        message: err.detail
+                    })
+            }) 
+            
+    } else if (isStringProvided(request.body.zip)) {
+        const theQuery = `INSERT INTO Locations(MemberId, Nickname, Zip) 
+        VALUES ($1, $2, $3)
+        RETURNING *`
+        const values = [response.locals.user, request.decoded.email, request.body.zip]
+
+        pool.query(theQuery, values)
+            .then(result => {
+                response.status(201).send({
+                    success: true,
+                    rows: result.rows
+                })
+            })
+            .catch(err => {
+                //log the error
+                console.log(err)
+                    response.status(400).send({
+                        message: err.detail
+                    })
+            }) 
+    } else {
+        response.status(400).send({
+            message: "Missing required information"
+        })
+    }
+})
+
+router.get("/location", (request, response, next) => {
+    const theQuery = "SELECT * FROM Locations WHERE Nickname=$1"
+    const values = [request.decoded.email]
+    pool.query(theQuery, values)
+        .then(result => {
+            response.status(201).send({
+                success: true,
+                rows: result.rows
+            })
+        })
+        .catch(err => {
+            console.log(err)
+            response.status(400).send({
+                message: err.detail
+            })
+        })
+})
 
 module.exports = router

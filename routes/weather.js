@@ -37,7 +37,7 @@ var router = express.Router()
             if (error){
                 res.send(error);
             }
-            else {
+            else if (typeof googleGeo.results[0] !== 'undefined') {
                 let googleGeo = JSON.parse(body);
                 lat = googleGeo.results[0].geometry.location.lat;
                 lon = googleGeo.results[0].geometry.location.lng;
@@ -52,6 +52,10 @@ var router = express.Router()
                     }
                 }
                 requestWeatherData(res, lat, lon, zipcode, cityName);
+            } else {
+                response.status(400).send({
+                    message: "Google API call failed"
+                })
             }
         })
     }
@@ -67,7 +71,7 @@ var router = express.Router()
         request(googleUrl, function (error, response, body) {
             if (error) {
                 res.send(error);
-            } else {
+            } else if (typeof googleGeo.results[0] !== 'undefined') {
                 let zip = "N/A";
                 let cityName = "Unknown";
                 let locationInfo = JSON.parse(body).results[0].address_components;
@@ -82,6 +86,10 @@ var router = express.Router()
                     }
                 }
                 requestWeatherData(res, lat, lon, zip, cityName);
+            } else {
+                response.status(400).send({
+                    message: "Google API call failed"
+                })
             }
         })
     }

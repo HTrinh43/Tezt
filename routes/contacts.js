@@ -166,8 +166,11 @@ router.post("/", (request, response, next) => {
             })
         })
 }, (request, response) => {
-    const theQuery = `SELECT members.email, contacts.verified, contacts.memberid_b, contacts.memberid_a FROM contacts
-     INNER JOIN members ON contacts.memberid_b = members.memberid  WHERE contacts.memberid_a=$1 OR (contacts.memberid_b=$1 AND contacts.verified=0)`
+    const theQuery = 
+    `SELECT members.email, contacts.verified, contacts.memberid_b, contacts.memberid_a FROM contacts 
+    INNER JOIN members ON ((Contacts.memberid_b = $1  AND Contacts.memberid_a = Members.memberid ) 
+    OR (Contacts.memberid_a = $1 AND Members.memberid = Contacts.memberid_b))`
+
     let values = [request.decoded.memberid]
 
 
@@ -382,7 +385,7 @@ router.delete("/:contact", (request, response, next) => {
 
     pool.query(theQuery, values)
         .then(result => {
-            if (result.rowCount >= 2) {
+            if (result.rowCount >= 1) {
                 response.send({
                     success: true,
                     message: "Deleted Contact: " + response.locals.contact + " from user " + response.locals.user

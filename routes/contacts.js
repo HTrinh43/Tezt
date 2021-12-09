@@ -364,11 +364,11 @@ router.put("/", (request, response, next) => {
  * 
  * @apiUse JSONError
  */ 
-router.delete("/", (request, response, next) => {
-    if (isStringProvided(request.body.contact)) {
+router.delete("/:contact", (request, response, next) => {
+    if (isStringProvided(request.params.contact)) {
         const theQuery = "(SELECT Memberid FROM Members WHERE Email=$1) " +
             "UNION (SELECT Memberid FROM Members WHERE Email=$2)"
-        const values = [request.decoded.email, request.body.contact]
+        const values = [request.decoded.email, request.params.contact]
 
         pool.query(theQuery, values)
             .then(result => {

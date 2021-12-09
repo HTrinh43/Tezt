@@ -67,6 +67,7 @@ router.post("/", (request, response, next) => {
     pool.query(theQuery, values)
         .then(result => {
             response.locals.chatid = result.rows[0].chatid
+            response.locals.name = result.rows[0].name
             next()
             // response.send({
             //     success: true,
@@ -109,11 +110,13 @@ router.post("/", (request, response, next) => {
             .then(result => {
                 console.log(request.decoded.email)
                 result.rows.forEach(entry => 
-                    msg_functions.sendMessageToIndividual(
+                    msg_functions.sendChatToIndividual(
                         entry.token, 
                         response.message))
                 response.send({
-                    success:true
+                    success:true,
+                    chatID:response.locals.chatid,
+                    name:response.locals.name
                 })
             }).catch(err => {
 
@@ -254,7 +257,7 @@ router.put("/:chatId/:email", (request, response, next) => {
     const values = [request.params.chatId]
     pool.query(theQuery, values)
         .then(result => {
-            response.rows = result.rows
+            response.locals.rows = result.rows
             next()
         })
         .catch(err => {
@@ -273,15 +276,14 @@ router.put("/:chatId/:email", (request, response, next) => {
         pool.query(theQuery, values)
             .then(result => {
                 console.log(request.decoded.email)
-                console.log(request.body.message)
                 result.rows.forEach(entry => 
                     msg_functions.sendChatToIndividual(
                         entry.token, 
                         response.message,
-                        response.rows))
+                        response.locals.rows))
                 response.send({
                     success:true,
-                    rows: response.rows
+                    rows: response.locals.rows
                 })
             }).catch(err => {
 

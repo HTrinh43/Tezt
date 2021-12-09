@@ -35,15 +35,15 @@ let isStringProvided = validation.isStringProvided
  * @apiError (400: Missing Parameters) {String} message "Missing required information"
  * 
  * @apiError (400: SQL Error) {String} message the reported SQL error details
- * 
+ *  
  * @apiUse JSONError
  */ 
 router.post("/", (request, response, next) => {
     if (isStringProvided(request.body.contact)) {
         console.log(request.decoded.email)
         console.log(request.body.contact)
-        const theQuery = "(SELECT Memberid FROM Members WHERE Email=$1) " +
-            "UNION (SELECT Memberid FROM Members WHERE Email=$2)"
+        const theQuery = "(SELECT Memberid, 1 sortby FROM Members WHERE Email=$1) " +
+            "UNION (SELECT Memberid, 2 sortby FROM Members WHERE Email=$2) ORDER BY sortby"
         const values = [request.decoded.email, request.body.contact]
 
         pool.query(theQuery, values)

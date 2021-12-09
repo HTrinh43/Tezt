@@ -79,33 +79,8 @@ router.post("/", (request, response, next) => {
             message: "Missing required information"
         })
     }
-        
 }, (request, response, next)  => {
-        //Inserting user_a = sender and user_b = receiver
         const theQuery = "INSERT INTO CONTACTS(memberid_a, memberid_b) VALUES ($1, $2) RETURNING *"
-        const values = [response.locals.user, response.locals.contact]
-
-        pool.query(theQuery, values)
-            .then(result => {
-
-               console.log("got here")
-               next()
-            })
-            .catch(err => {
-                //log the error
-                console.log(err)
-                if (err.constraint == "contact_name_key") {
-                    response.status(400).send({
-                        message: "Name exists"
-                    })
-                } else {
-                    response.status(400).send({
-                        message: err.detail
-                    })
-                }
-            }) 
-}, (request, response, next)  => {
-        const theQuery = "INSERT INTO CONTACTS(memberid_b, memberid_a) VALUES ($1, $2) RETURNING *"
         const values = [response.locals.user, response.locals.contact]
         pool.query(theQuery, values)
             .then(result => {

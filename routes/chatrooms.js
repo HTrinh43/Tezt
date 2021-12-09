@@ -99,7 +99,7 @@ let isStringProvided = validation.isStringProvided
 
 router.delete("/:chatid", (request, response, next) => {
     if (isStringProvided(request.params.chatid)) {
-        let theQuery = `DELETE FROM Messages WHERE Memberid IN (SELECT Memberid FROM Chatmembers Where Chatid = $1)`
+        let theQuery = `DELETE FROM Messages Where Chatid = $1`
         let values = [request.params.chatid]
         pool.query(theQuery, values)
             .then(result => {

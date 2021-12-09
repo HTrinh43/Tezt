@@ -40,6 +40,8 @@ let isStringProvided = validation.isStringProvided
  */ 
 router.post("/", (request, response, next) => {
     if (isStringProvided(request.body.contact)) {
+        console.log(request.decoded.email)
+        console.log(request.body.contact)
         const theQuery = "(SELECT Memberid FROM Members WHERE Email=$1) " +
             "UNION (SELECT Memberid FROM Members WHERE Email=$2)"
         const values = [request.decoded.email, request.body.contact]

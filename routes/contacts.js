@@ -39,6 +39,7 @@ let isStringProvided = validation.isStringProvided
  * @apiUse JSONError
  */ 
 router.post("/", (request, response, next) => {
+    console.log("post contacts")
     if (isStringProvided(request.body.contact)) {
         console.log(request.decoded.email)
         console.log(request.body.contact)
@@ -87,6 +88,7 @@ router.post("/", (request, response, next) => {
     pool.query(theQuery, values)
         .then(result => {
             response.message = result.rows
+            console.log(response.message)
             next()
             // response.status(201).send({
             //     success: true,
@@ -115,8 +117,12 @@ router.post("/", (request, response, next) => {
     let values = [response.locals.contact]
     pool.query(query, values)
         .then(result => {
-            console.log(request.decoded.email)
-            console.log(request.body.message)
+            console.log(response.message)
+            console.log("hello")
+            response.message.user = request.decoded.email
+            response.message.contact = request.body.contact
+            console.log(response.message.user)
+            console.log(response.message)
             result.rows.forEach(entry => 
                 msg_functions.sendContactToIndividual(
                     entry.token,

@@ -104,17 +104,17 @@ router.post("/", (request, response, next) => {
                     })
                 }
             }) 
-}, (request, response)  => {
+}, (request, response, next)  => {
         const theQuery = "INSERT INTO CONTACTS(memberid_b, memberid_a) VALUES ($1, $2) RETURNING *"
         const values = [response.locals.user, response.locals.contact]
         pool.query(theQuery, values)
             .then(result => {
                 response.message = result.rows
-                //next()
-                response.status(201).send({
-                    success: true,
-                    message: "Inserted: " + result.rows
-                })
+                next()
+                // response.status(201).send({
+                //     success: true,
+                //     message: "Inserted: " + result.rows
+                // })
             })
             .catch(err => {
                 //log the error
@@ -190,7 +190,8 @@ router.post("/", (request, response, next) => {
             })
         })
 }, (request, response) => {
-    const theQuery = 'SELECT members.email, contacts.verified, contacts.memberid_b FROM contacts INNER JOIN members ON contacts.memberid_b = members.memberid  WHERE contacts.memberid_a=$1;'
+    const theQuery = `SELECT members.email, contacts.verified, contacts.memberid_b, contacts.memberid_a FROM contacts
+     INNER JOIN members ON contacts.memberid_b = members.memberid  WHERE contacts.memberid_a=$1 OR (contacts.memberid_b=$1 AND contacts.verified=0)`
     let values = [request.decoded.memberid]
 
 

@@ -79,22 +79,48 @@ router.post("/", (request, response, next) => {
             })
 
         })
-}, (request, response) => {
+}, (request, response, next) => {
     const theQuery = `INSERT INTO ChatMembers(Chatid, Memberid)
                     VALUES ($1, $2) RETURNING ChatId`
     const values = [response.locals.chatid, response.locals.user]
     pool.query(theQuery, values)
         .then(result => {
-            response.send({
-                success: true,
-                chatID:result.rows[0].chatid,
-                name:result.rows[0].name
-            })
+            response.message = result.rows
+            next()
+            // response.send({
+            //     success: true,
+            //     chatID:result.rows[0].chatid,
+            //     name:result.rows[0].name
+            // })
         }).catch(err => {
             response.status(400).send({
                 error: err
             })
         })
+}, (request, response) => {
+// send a notification of this message to ALL members with registered tokens
+        const theQuery = `SELECT token FROM Push_Token
+                        INNER JOIN ChatMembers ON
+                        Push_Token.memberid=ChatMembers.memberid
+                        WHERE ChatMembers.chatId=$1`
+        const values = [response.locals.chatid]
+        pool.query(theQuery, values)
+            .then(result => {
+                console.log(request.decoded.email)
+                result.rows.forEach(entry => 
+                    msg_functions.sendChatToIndividual(
+                        entry.token, 
+                        response.message))
+                response.send({
+                    success:true
+                })
+            }).catch(err => {
+
+                response.status(400).send({
+                    message: "SQL Error on select from push token",
+                    error: err
+                })
+            })
 })
 
 /**
@@ -136,10 +162,10 @@ router.put("/:chatId/:email", (request, response, next) => {
     }
 }, (request, response, next) => {
     //validate chat id exists
-    let query = 'SELECT * FROM CHATS WHERE ChatId=$1'
-    let values = [request.params.chatId]
+    const theQuery = 'SELECT * FROM CHATS WHERE ChatId=$1'
+    const values = [request.params.chatId]
 
-    pool.query(query, values)
+    pool.query(theQuery, values)
         .then(result => {
             if (result.rowCount == 0) {
                 response.status(404).send({
@@ -157,12 +183,12 @@ router.put("/:chatId/:email", (request, response, next) => {
         //code here based on the results of the query
 }, (request, response, next) => {
     //validate email exists 
-    let query = 'SELECT * FROM Members WHERE Email=$1'
-    let values = [request.params.email]
+    const theQuery = 'SELECT * FROM Members WHERE Email=$1'
+    const values = [request.params.email]
 
-console.log(request.decoded)
+    console.log(request.decoded)
 
-    pool.query(query, values)
+    pool.query(theQuery, values)
         .then(result => {
             if (result.rowCount == 0) {
                 response.status(404).send({
@@ -201,13 +227,14 @@ console.log(request.decoded)
             })
 
 }, (request, response, next) => {
-    //Insert the memberId into the chat
-    let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
+    const theQuery = `INSERT INTO ChatMembers(ChatId, MemberId)
                   VALUES ($1, $2)
                   RETURNING *`
-    let values = [request.params.chatId, response.locals.user]
-    pool.query(insert, values)
+    const values = [request.params.chatId, response.locals.user]
+    pool.query(theQuery, values)
         .then(result => {
+            response.message = result.rows
+
             next()
             // response.send({
             //     success: true
@@ -220,12 +247,12 @@ console.log(request.decoded)
         })
 }, (request, response) => {
     // send a notification of this message to ALL members with registered tokens
-        let query = `SELECT token FROM Push_Token
+        const theQuery = `SELECT token FROM Push_Token
                         INNER JOIN ChatMembers ON
                         Push_Token.memberid=ChatMembers.memberid
                         WHERE ChatMembers.chatId=$1`
-        let values = [request.params.chatId]
-        pool.query(query, values)
+        const values = [request.params.chatId]
+        pool.query(theQuery, values)
             .then(result => {
                 console.log(request.decoded.email)
                 console.log(request.body.message)

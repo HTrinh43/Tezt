@@ -1,5 +1,5 @@
 const API_KEY = process.env.OPENWEATHER_API_KEY
-const GOOGLE_KEY = process.env.GOOGLE_API_KEY;
+// const GOOGLE_KEY = process.env.GOOGLE_API_KEY;
 //express is the framework we're going to use to handle requests
 const express = require('express')
 
@@ -27,40 +27,40 @@ var router = express.Router()
     // res.type("application/json");
     console.log(JSON.stringify(req.headers));
     //if the request include a zip code
-    if (req.headers.zip && req.headers.zip.length === 5){
-        var zipcode = req.headers.zip;
-        let googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=zipcode" + zipcode + "&key=" +
-        GOOGLE_KEY;
-        console.log("googleUrl");
+    // if (req.headers.zip && req.headers.zip.length === 5){
+    //     var zipcode = req.headers.zip;
+    //     let googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=zipcode" + zipcode + "&key=" +
+    //     GOOGLE_KEY;
+    //     console.log("googleUrl");
 
-        request(googleURL, function(error, response, body){
-            if (error){
-                res.send(error);
-            } else if (typeof JSON.parse(body).results[0] !== 'undefined') {
-                let googleGeo = JSON.parse(body);
-                lat = googleGeo.results[0].geometry.location.lat;
-                lon = googleGeo.results[0].geometry.location.lng;
-                let locationInfo = googleGeo.results[0].address_components;
-                cityName = "Unknown";
-                for (let i = 0; i < locationInfo.length; i++) {
-                    if (locationInfo[i].types.includes("locality") ||
-                        locationInfo[i].types.includes("sublocality") ||
-                        locationInfo[i].types.includes("sublocality_level_1")) {
-                        cityName = locationInfo[i].short_name;
-                        break;
-                    }
-                }
-                requestWeatherData(res, lat, lon);
-            } else {
-                res.status(400).send({
-                    message: "Google API call failed"
-                })
-            }
-        })
-    }
+    //     request(googleURL, function(error, response, body){
+    //         if (error){
+    //             res.send(error);
+    //         } else if (typeof JSON.parse(body).results[0] !== 'undefined') {
+    //             let googleGeo = JSON.parse(body);
+    //             lat = googleGeo.results[0].geometry.location.lat;
+    //             lon = googleGeo.results[0].geometry.location.lng;
+    //             let locationInfo = googleGeo.results[0].address_components;
+    //             cityName = "Unknown";
+    //             for (let i = 0; i < locationInfo.length; i++) {
+    //                 if (locationInfo[i].types.includes("locality") ||
+    //                     locationInfo[i].types.includes("sublocality") ||
+    //                     locationInfo[i].types.includes("sublocality_level_1")) {
+    //                     cityName = locationInfo[i].short_name;
+    //                     break;
+    //                 }
+    //             }
+    //             requestWeatherData(res, lat, lon);
+    //         } else {
+    //             res.status(400).send({
+    //                 message: "Google API call failed"
+    //             })
+    //         }
+    //     })
+    // }
 
     //if request contains lon and lat
-    else if (req.headers.latitude && req.headers.longitude) {
+    if (req.headers.latitude && req.headers.longitude) {
         let coords = req.headers.latitude + "," + req.headers.longitude;
         lat = req.headers.latitude;
         lon = req.headers.longitude;

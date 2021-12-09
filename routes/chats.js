@@ -86,6 +86,7 @@ router.post("/", (request, response, next) => {
     pool.query(theQuery, values)
         .then(result => {
             response.message = result.rows
+            console.log(response.message)
             next()
             // response.send({
             //     success: true,
@@ -108,7 +109,7 @@ router.post("/", (request, response, next) => {
             .then(result => {
                 console.log(request.decoded.email)
                 result.rows.forEach(entry => 
-                    msg_functions.sendChatToIndividual(
+                    msg_functions.sendMessageToIndividual(
                         entry.token, 
                         response.message))
                 response.send({
@@ -209,7 +210,7 @@ router.put("/:chatId/:email", (request, response, next) => {
         //validate email does not already exist in the chat
         let query = 'SELECT * FROM ChatMembers WHERE ChatId=$1 AND MemberId=$2'
         let values = [request.params.chatId, response.locals.user]
-    
+        console.log("nice to see ya")
         pool.query(query, values)
             .then(result => {
                 if (result.rowCount > 0) {
@@ -233,13 +234,30 @@ router.put("/:chatId/:email", (request, response, next) => {
     const values = [request.params.chatId, response.locals.user]
     pool.query(theQuery, values)
         .then(result => {
-            response.message = result.rows
-
+            response.message = result.rows[0]
+            console.log(response.message)
             next()
             // response.send({
             //     success: true
             // })
         }).catch(err => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: err
+            })
+        })
+}, (request, response, next) => {
+    const theQuery =  `SELECT Members.email FROM Members
+                    INNER JOIN ChatMembers ON 
+                    Members.memberid=ChatMembers.memberid
+                    Where ChatMembers.chatId = $1`
+    const values = [request.params.chatId]
+    pool.query(theQuery, values)
+        .then(result => {
+            response.rows = result.rows
+            next()
+        })
+        .catch(err => {
             response.status(400).send({
                 message: "SQL Error",
                 error: err
@@ -259,9 +277,11 @@ router.put("/:chatId/:email", (request, response, next) => {
                 result.rows.forEach(entry => 
                     msg_functions.sendChatToIndividual(
                         entry.token, 
-                        response.message))
+                        response.message,
+                        response.rows))
                 response.send({
-                    success:true
+                    success:true,
+                    rows: response.rows
                 })
             }).catch(err => {
 

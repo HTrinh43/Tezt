@@ -97,10 +97,10 @@ let isStringProvided = validation.isStringProvided
         })
 });
 
-router.delete("/", (request, response, next) => {
-    if (isStringProvided(request.body.chatid)) {
-        let theQuery = "DELETE FROM ChatMembers Where Chatid = $1"
-        let values = [request.body.chatid]
+router.delete("/:chatid", (request, response, next) => {
+    if (isStringProvided(request.params.chatid)) {
+        let theQuery = `DELETE FROM Messages WHERE Memberid IN (SELECT Memberid FROM Chatmembers Where Chatid = $1)`
+        let values = [request.params.chatid]
         pool.query(theQuery, values)
             .then(result => {
                 next()
@@ -116,9 +116,22 @@ router.delete("/", (request, response, next) => {
             message: "Missing values"
         })
     }
+}, (request, response, next) => {
+    let theQuery = "DELETE FROM ChatMembers Where Chatid = $1"
+    let values = [request.params.chatid]
+    pool.query(theQuery, values)
+        .then(result => {
+            next()
+        }).catch(err => {
+            console.log(err)
+            response.status(400).send({
+                message: "SQL Error",
+                error: err
+            })
+        })
 }, (request, response) => {
     let theQuery = "DELETE FROM Chats WHERE chatid = $1"
-        let values = [request.body.chatid]
+        let values = [request.params.chatid]
     pool.query(theQuery, values)
             .then(result => {
                 response.status(201).send({

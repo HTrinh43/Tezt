@@ -55,7 +55,8 @@ function sendChatToIndividual(token, message) {
     //build the message for Pushy to send
     let data = {
         "type": "chat",
-        "message": message
+        "message": message,
+        "chatid": message.chatid
     };
 
     // Send push notification via the Send Notifications API

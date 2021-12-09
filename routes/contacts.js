@@ -81,30 +81,56 @@ router.post("/", (request, response, next) => {
             message: "Missing required information"
         })
     }
-}, (request, response)  => {
-        const theQuery = "INSERT INTO CONTACTS(memberid_a, memberid_b) VALUES ($1, $2) RETURNING *"
-        const values = [response.locals.user, response.locals.contact]
-        pool.query(theQuery, values)
-            .then(result => {
-                response.message = result.rows
-                response.status(201).send({
-                    success: true,
-                    message: "Inserted: " + result.rows
+}, (request, response, next)  => {
+    const theQuery = "INSERT INTO CONTACTS(memberid_a, memberid_b) VALUES ($1, $2) RETURNING *"
+    const values = [response.locals.user, response.locals.contact]
+    pool.query(theQuery, values)
+        .then(result => {
+            response.message = result.rows
+            next()
+            // response.status(201).send({
+            //     success: true,
+            //     message: "Inserted: " + result.rows
+            // })
+        })
+        .catch(err => {
+            //log the error
+            console.log(err)
+            if (err.constraint == "contact_name_key") {
+                response.status(400).send({
+                    message: "Name exists"
                 })
+            } else {
+                response.status(400).send({
+                    message: err.detail
+                })
+            }
+        }) 
+}, (request, response) => {
+    // send a notification of this message to ALL members with registered tokens
+    let query = `SELECT token FROM Push_Token
+                    INNER JOIN Contacts ON
+                    Push_Token.memberid=Contacts.memberid_b
+                    WHERE Contacts.memberid_b=$1`
+    let values = [response.locals.contact]
+    pool.query(query, values)
+        .then(result => {
+            console.log(request.decoded.email)
+            console.log(request.body.message)
+            result.rows.forEach(entry => 
+                msg_functions.sendContactToIndividual(
+                    entry.token,
+                    response.message))
+            response.send({
+                success:true
             })
-            .catch(err => {
-                //log the error
-                console.log(err)
-                if (err.constraint == "contact_name_key") {
-                    response.status(400).send({
-                        message: "Name exists"
-                    })
-                } else {
-                    response.status(400).send({
-                        message: err.detail
-                    })
-                }
-            }) 
+        }).catch(err => {
+
+            response.status(400).send({
+                message: "SQL Error on select from push token",
+                error: err
+            })
+        })
 })
 
 /**
@@ -263,8 +289,8 @@ router.post("/", (request, response, next) => {
  */ 
 router.put("/", (request, response, next) => {
     if (isStringProvided(request.body.verification) && isStringProvided(request.body.contact)) {
-        const theQuery = "(SELECT Memberid FROM Members WHERE Email=$1) " +
-            "UNION (SELECT Memberid FROM Members WHERE Email=$2)"
+        const theQuery = "(SELECT Memberid, 1 sortby FROM Members WHERE Email=$1) " +
+            "UNION (SELECT Memberid, 2 sortby FROM Members WHERE Email=$2 ORDER BY sortby)"
         const values = [request.decoded.email, request.body.contact]
 
         pool.query(theQuery, values)
@@ -378,7 +404,7 @@ router.delete("/:contact", (request, response, next) => {
         })
     }
         
-}, (request, response)  => {
+}, (request, response, next)  => {
         
     const theQuery = "DELETE FROM Contacts WHERE (memberid_a=$1 AND memberid_b=$2) OR (memberid_a=$2 AND memberid_b=$1) RETURNING *"
     const values = [response.locals.user, response.locals.contact]
@@ -386,10 +412,13 @@ router.delete("/:contact", (request, response, next) => {
     pool.query(theQuery, values)
         .then(result => {
             if (result.rowCount >= 1) {
-                response.send({
-                    success: true,
-                    message: "Deleted Contact: " + response.locals.contact + " from user " + response.locals.user
-                })
+                response.message = "Deleted Contact: " + response.locals.contact + " from user " + response.locals.user
+                response.locals.rows = result.rows[0]
+                next()
+                // response.send({
+                //     success: true,
+                //     message: "Deleted Contact: " + response.locals.contact + " from user " + response.locals.user
+                // })
             } else {
                 response.status(404).send({
                     message: "User and associated contact not found"
@@ -403,6 +432,31 @@ router.delete("/:contact", (request, response, next) => {
                 message: err.detail
             })
         }) 
+}, (request, response) => {
+    // send a notification of this message to ALL members with registered tokens
+    let query = `SELECT token FROM Push_Token
+                    INNER JOIN Contacts ON
+                    Push_Token.memberid=Contacts.memberid_b
+                    WHERE Contacts.memberid_b=$1`
+    let values = [response.locals.contact]
+    pool.query(query, values)
+        .then(result => {
+            console.log(request.decoded.email)
+            console.log(request.body.message)
+            result.rows.forEach(entry => 
+                msg_functions.sendContactToIndividual(
+                    entry.token,
+                    response.message))
+            response.send({
+                success:true
+            })
+        }).catch(err => {
+
+            response.status(400).send({
+                message: "SQL Error on select from push token",
+                error: err
+            })
+        })
 })
 
 module.exports = router

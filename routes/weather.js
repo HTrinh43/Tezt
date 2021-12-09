@@ -36,9 +36,8 @@ var router = express.Router()
         request(googleURL, function(error, response, body){
             if (error){
                 res.send(error);
-            }
-            else if (typeof googleGeo.results[0] !== 'undefined') {
-                let googleGeo = JSON.parse(body);
+            } else if (typeof JSON.parse(body).results[0] !== 'undefined') {
+            let googleGeo = JSON.parse(body);
                 lat = googleGeo.results[0].geometry.location.lat;
                 lon = googleGeo.results[0].geometry.location.lng;
                 let locationInfo = googleGeo.results[0].address_components;
@@ -71,7 +70,7 @@ var router = express.Router()
         request(googleUrl, function (error, response, body) {
             if (error) {
                 res.send(error);
-            } else if (typeof googleGeo.results[0] !== 'undefined') {
+            } else if (typeof JSON.parse(body).results[0] !== 'undefined') {
                 let zip = "N/A";
                 let cityName = "Unknown";
                 let locationInfo = JSON.parse(body).results[0].address_components;

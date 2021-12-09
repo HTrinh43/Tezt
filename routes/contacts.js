@@ -79,17 +79,16 @@ router.post("/", (request, response, next) => {
             message: "Missing required information"
         })
     }
-}, (request, response, next)  => {
+}, (request, response)  => {
         const theQuery = "INSERT INTO CONTACTS(memberid_a, memberid_b) VALUES ($1, $2) RETURNING *"
         const values = [response.locals.user, response.locals.contact]
         pool.query(theQuery, values)
             .then(result => {
                 response.message = result.rows
-                next()
-                // response.status(201).send({
-                //     success: true,
-                //     message: "Inserted: " + result.rows
-                // })
+                response.status(201).send({
+                    success: true,
+                    message: "Inserted: " + result.rows
+                })
             })
             .catch(err => {
                 //log the error

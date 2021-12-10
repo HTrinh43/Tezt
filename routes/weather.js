@@ -11,11 +11,13 @@ const { isStringProvided } = require('../utilities/validationUtils');
 var router = express.Router()
 
 /**
- * @api {get} /weather Request a list of Phish.net Blogs
+ * @api {get} /weather Request the weather
  * @apiName GetWeather
  * @apiGroup Weather
  * 
  * @apiHeader {String} authorization JWT provided from Auth get
+ * @apiHeader {int} longititude
+ * @apiHeader {int} latitude
  * 
  * @apiDescription This end point is a pass through to the OpenWeather API. 
  * 
@@ -151,6 +153,18 @@ function requestWeatherData(res, lat, lon){
     });
 }
 
+/**
+ * @api {post} /weather Request to store the weather location
+ * @apiName PostWeather
+ * @apiGroup Weather
+ * 
+ * @apiHeader {String} authorization JWT provided from Auth get
+ * @apiBody {int} longititude
+ * @apiHeader {int} latitude
+ * 
+ * @apiDescription Stores the location for the weather.
+ * 
+ */ 
 router.post("/", (request, response, next) => {
     const theQuery = "SELECT Memberid FROM Members WHERE Email=$1"
     const values = [request.decoded.email]
@@ -168,7 +182,7 @@ router.post("/", (request, response, next) => {
 }, (request, response) => {
 
     if (isStringProvided(request.body.lat) && isStringProvided(request.body.long)) {
-        const theQuery = `INSERT INTO Locations(MemberId, Nickname, Lat, Long) 
+        const theQuery = `INSERT INTO Locations(MemberId, Email, Lat, Long) 
         VALUES ($1, $2, $3, $4)
         RETURNING *`
         const values = [response.locals.user, request.decoded.email, request.body.lat, request.body.long]
@@ -189,7 +203,7 @@ router.post("/", (request, response, next) => {
             }) 
             
     } else if (isStringProvided(request.body.zip)) {
-        const theQuery = `INSERT INTO Locations(MemberId, Nickname, Zip) 
+        const theQuery = `INSERT INTO Locations(MemberId, Email, Zip) 
         VALUES ($1, $2, $3)
         RETURNING *`
         const values = [response.locals.user, request.decoded.email, request.body.zip]
@@ -214,9 +228,18 @@ router.post("/", (request, response, next) => {
         })
     }
 })
-
+/**
+ * @api {get} /weather/location Request the weather location
+ * @apiName GetWeatherLocation
+ * @apiGroup Weather
+ * 
+ * @apiHeader {String} authorization JWT provided from Auth get
+ * 
+ * @apiDescription This end point retrieves location stored in the server.
+ * 
+ */ 
 router.get("/location", (request, response, next) => {
-    const theQuery = "SELECT * FROM Locations WHERE Nickname=$1"
+    const theQuery = "SELECT * FROM Locations WHERE Email=$1"
     const values = [request.decoded.email]
     pool.query(theQuery, values)
         .then(result => {

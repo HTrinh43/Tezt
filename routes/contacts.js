@@ -24,10 +24,9 @@ let isStringProvided = validation.isStringProvided
  * 
  * @apiDescription Request to add a contact to a given user.
  * 
- * @apiParam {String} name someone's name *unique
- * @apiParam {String} message a message to store with the name
+ * @apiBody {String} contact someone's email *unique
  * 
- * @apiSuccess (Success 201) {boolean} success true when the name is inserted
+ * @apiSuccess (Success 201) {boolean} success true when the contact is added
  * @apiSuccess (Success 201) {String} message the inserted name
  * 
  * @apiError (400: Name exists) {String} message "Name exists"
@@ -128,7 +127,8 @@ router.post("/", (request, response, next) => {
                     entry.token,
                     response.message))
             response.send({
-                success:true
+                success:true,
+                message:respsonse.message
             })
         }).catch(err => {
 
@@ -140,15 +140,13 @@ router.post("/", (request, response, next) => {
 })
 
 /**
- * @api {get} /contacts/:name? Request to get all contact entries in the DB
+ * @api {get} /contacts/:name? Request to get all your contact entries in the DB
  * @apiName GetContacts
  * @apiGroup Contacts
  * 
  * @apiDescription Request to get all the contact entries for the user.
  * 
- * @apiParam {String} [name] the contacts to look up. 
- * 
- * @apiSuccess {boolean} success true when the name is inserted
+ * @apiSuccess {boolean} success true when the contacts are retrieved
  * @apiSuccess {Object[]} names List of user (contacts) in the Contacts DB
  * @apiSuccess {String} contacts.memberid_b The contact in relation to memberid_a
  * @apiSuccess {String} contacts.verified The verification status of contact
@@ -163,9 +161,6 @@ router.post("/", (request, response, next) => {
 
     //const theQuery = 'SELECT contacts.memberid_b, contacts.verified, members.firstname FROM ((Contacts INNER JOIN firstname ON contact.memberid_b = members.memberid) (Contacts WHERE memberid_a=$1)'
     
-
-    //No name was sent so SELECT on all
-    //is there a reason to do this?
     if (request.decoded.memberid === undefined) {
         response.status(400).send({
             message: "Missing required information"
@@ -278,9 +273,8 @@ router.post("/", (request, response, next) => {
  * 
  * @apiDescription Request to update contact verification and name.
  * 
- * @apiParam {String} verification status of contact
- * @apiParam {String} contact id of associated contact
- * @apiParam {String} user id of associated user
+ * @apiBody {String} verification status of contact
+ * @apiBody {String} contact email of associated contact
  * 
  * @apiSuccess {boolean} success true when the contact is updated
  * @apiSuccess {String} message Updated user ID x contact ID y to verification status z

@@ -96,7 +96,21 @@ let isStringProvided = validation.isStringProvided
             })
         })
 });
-
+/**
+ * @api {delete} /chatrooms Request to get chat rooms 
+ * @apiName DeleteChatrooms
+ * @apiGroup Chatrooms
+ * 
+ * @apiDescription Request to delete a specific chat room.
+ * 
+ * @apiSuccess {String} chatmembers.chatid The id of the chatroom
+ * 
+ * @apiError (400: Missing Parameters) {String} message "Missing required information"
+ * 
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * 
+ * @apiUse JSONError
+ */ 
 router.delete("/:chatid", (request, response, next) => {
     if (isStringProvided(request.params.chatid)) {
         let theQuery = `DELETE FROM Messages Where Chatid = $1`

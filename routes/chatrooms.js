@@ -97,7 +97,7 @@ let isStringProvided = validation.isStringProvided
         })
 });
 /**
- * @api {delete} /chatrooms Request to get chat rooms 
+ * @api {delete} /chatrooms Request to delete chat rooms 
  * @apiName DeleteChatrooms
  * @apiGroup Chatrooms
  * 

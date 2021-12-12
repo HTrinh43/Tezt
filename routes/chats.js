@@ -38,12 +38,9 @@ let isStringProvided = validation.isStringProvided
  */ 
 router.post("/", (request, response, next) => {
     if (!isStringProvided(request.body.name)) {
-        response.status(400).send({
-            message: "Missing required information"
-        })
-    } else {
-        next()
+        request.body.name = "Default Name"
     }
+    next()
 }, (request, response, next) => {
     const theQuery = "SELECT Memberid FROM Members WHERE Email=$1"
     const values = [request.decoded.email]

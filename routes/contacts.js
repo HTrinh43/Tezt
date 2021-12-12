@@ -358,7 +358,8 @@ router.put("/", (request, response, next) => {
         let query = `SELECT token FROM Push_Token
                         INNER JOIN Contacts ON
                         Push_Token.memberid=Contacts.memberid_b
-                        WHERE Contacts.memberid_b=$1`
+                        WHERE Contacts.memberid_b=$1
+                        OR Contacts.memberid_a=$1`
         let values = [response.locals.contact]
         pool.query(query, values)
             .then(result => {
@@ -407,8 +408,8 @@ router.put("/", (request, response, next) => {
  */ 
 router.delete("/:contact", (request, response, next) => {
     if (isStringProvided(request.params.contact)) {
-        const theQuery = "(SELECT Memberid, 1 sortby FROM Members WHERE Email=$1) " +
-            "UNION (SELECT Memberid, 2 sortby FROM Members WHERE Email=$2) ORDER BY sortby"
+        const theQuery = "(SELECT Memberid FROM Members WHERE Email=$1) " +
+        "UNION (SELECT Memberid FROM Members WHERE Email=$2)"
         const values = [request.decoded.email, request.params.contact]
 
         pool.query(theQuery, values)
@@ -478,7 +479,8 @@ router.delete("/:contact", (request, response, next) => {
     let query = `SELECT token FROM Push_Token
                     INNER JOIN Contacts ON
                     Push_Token.memberid=Contacts.memberid_b
-                    WHERE Contacts.memberid_b=$1`
+                    WHERE Contacts.memberid_b=$1
+                    OR Contacts.memberid_a=$1`
     let values = [response.locals.contact]
     pool.query(query, values)
         .then(result => {

@@ -276,8 +276,7 @@ router.put("/:chatId/:email", (request, response, next) => {
                 result.rows.forEach(entry => 
                     msg_functions.sendChatToIndividual(
                         entry.token, 
-                        response.message,
-                        response.locals.rows))
+                        response.message))
                 response.send({
                     success:true,
                     rows: response.locals.rows
@@ -464,7 +463,7 @@ router.delete("/:chatId/:email", (request, response, next) => {
                 })
             })
 
-}, (request, response) => {
+}, (request, response, next) => {
     //Delete the memberId from the chat
     let insert = `DELETE FROM ChatMembers
                   WHERE ChatId=$1
@@ -473,16 +472,43 @@ router.delete("/:chatId/:email", (request, response, next) => {
     let values = [request.params.chatId, request.params.email]
     pool.query(insert, values)
         .then(result => {
-            response.send({
-                success: true
-            })
+            next()
+            // response.send({
+            //     success: true
+            // })
         }).catch(err => {
             response.status(400).send({
                 message: "SQL Error",
                 error: err
             })
         })
-    }
-)
+}, (request, response) => {
+// send a notification of this message to ALL members with registered tokens
+        const theQuery = `SELECT token FROM Push_Token
+                        INNER JOIN ChatMembers ON
+                        Push_Token.memberid=ChatMembers.memberid
+                        WHERE ChatMembers.chatId=$1`
+        const values = [request.params.chatId]
+        pool.query(theQuery, values)
+            .then(result => {
+                console.log(request.decoded.email)
+                response.message = "The user," + request.params.email + "has been removed from the chat." 
+                result.rows.forEach(entry => 
+                    msg_functions.sendChatToIndividual(
+                        entry.token, 
+                        response.message))
+                response.send({
+                    success:true,
+                    chatID:response.params.chatId,
+                    deleted:request.params.email
+                })
+            }).catch(err => {
+
+                response.status(400).send({
+                    message: "SQL Error on select from push token",
+                    error: err
+                })
+            })
+})
 
 module.exports = router

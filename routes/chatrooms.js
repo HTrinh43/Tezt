@@ -143,14 +143,15 @@ router.delete("/:chatid", (request, response, next) => {
                 error: err
             })
         })
-}, (request, response) => {
+}, (request, response, next) => {
     let theQuery = "DELETE FROM Chats WHERE chatid = $1"
         let values = [request.params.chatid]
     pool.query(theQuery, values)
             .then(result => {
-                response.status(201).send({
-                    success:true
-                })
+                next()
+                // response.status(201).send({
+                //     success:true
+                // })
             }).catch(err => {
                 console.log(err)
                 response.status(400).send({
@@ -158,6 +159,34 @@ router.delete("/:chatid", (request, response, next) => {
                     error: err
                 })
             })
-})
+}, (request, response) => {
+// send a notification of this message to ALL members with registered tokens
+        const theQuery = `SELECT token FROM Push_Token
+                        INNER JOIN ChatMembers ON
+                        Push_Token.memberid=ChatMembers.memberid
+                        WHERE ChatMembers.chatId=$1`
+        const values = [request.params.chatid]
+        pool.query(theQuery, values)
+            .then(result => {
+                response.message = result.rows
+                console.log(response.message)
+                console.log(request.decoded.email)
+                result.rows.forEach(entry => 
+                    msg_functions.sendChatToIndividual(
+                        entry.token, 
+                        response.message))
+                response.send({
+                    success:true,
+                    chatID:request.params.chatid,
+                    message:response.message
+                })
+            }).catch(err => {
+
+                response.status(400).send({
+                    message: "SQL Error on select from push token",
+                    error: err
+                })
+            })
+        })
 
 module.exports = router

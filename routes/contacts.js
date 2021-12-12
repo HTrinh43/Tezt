@@ -206,7 +206,8 @@ router.post("/", (request, response, next) => {
         .then(result => {
             response.send({
                 success: true,
-                contacts: result.rows
+                contacts: result.rows,
+                userid: request.decoded.memberid
             })
 
         }).catch(err => {
@@ -290,7 +291,7 @@ router.post("/", (request, response, next) => {
 router.put("/", (request, response, next) => {
     if (isStringProvided(request.body.verification) && isStringProvided(request.body.contact)) {
         const theQuery = "(SELECT Memberid, 1 sortby FROM Members WHERE Email=$1) " +
-            "UNION (SELECT Memberid, 2 sortby FROM Members WHERE Email=$2 ORDER BY sortby)"
+            "UNION (SELECT Memberid, 2 sortby FROM Members WHERE Email=$2) ORDER BY sortby"
         const values = [request.decoded.email, request.body.contact]
 
         pool.query(theQuery, values)
@@ -321,7 +322,7 @@ router.put("/", (request, response, next) => {
             message: "Missing required information"
         })
     }
-}, (request, response) => {
+}, (request, response, next) => {
     const theQuery = "UPDATE Contacts SET verified = $1 WHERE (memberid_b = $2 AND memberid_a = $3)" +
     " OR (memberid_b = $3 AND memberid_a = $2) RETURNING *"
     const values = [request.body.verification, response.locals.contact, response.locals.user]
@@ -329,10 +330,16 @@ router.put("/", (request, response, next) => {
     pool.query(theQuery, values)
         .then(result => {
             if (result.rowCount > 0) {
-                response.send({
-                    success: true,
-                    message: "Updated user ID " + result.rows[0].memberid_b + " contact ID " + result.rows[0].memberid_a + " to verification status " + result.rows[0].verified
-                })
+                response.locals.rows = result.rows[0]
+                response.message = "Updated user ID " + result.rows[0].memberid_b + 
+                " contact ID " + result.rows[0].memberid_a + " to verification status " + result.rows[0].verified
+                next()
+                // response.send({
+                //     success: true,
+                //     message: "Updated user ID " + result.rows[0].memberid_b + " contact ID " + result.rows[0].memberid_a + " to verification status " + result.rows[0].verified,
+                //     sender: response.locals.user, 
+                //     receiver: response.locals.contact
+                // })
             } else {
                 response.status(404).send({
                     message: "Contact info not found"
@@ -346,6 +353,35 @@ router.put("/", (request, response, next) => {
                 message: err.detail
             })
         }) 
+}, (request, response) => {
+        // send a notification of this message to ALL members with registered tokens
+        let query = `SELECT token FROM Push_Token
+                        INNER JOIN Contacts ON
+                        Push_Token.memberid=Contacts.memberid_b
+                        WHERE Contacts.memberid_b=$1`
+        let values = [response.locals.contact]
+        pool.query(query, values)
+            .then(result => {
+                console.log(request.decoded.email)
+                console.log(request.body.message)
+                console.log(response.message)
+                result.rows.forEach(entry => 
+                    msg_functions.sendContactToIndividual(
+                        entry.token,
+                        response.message))
+                response.send({
+                    success:true,
+                    rows:response.locals.rows,
+                    sender:request.decoded.email,
+                    receiver:request.body.contact
+                })
+            }).catch(err => {
+    
+                response.status(400).send({
+                    message: "SQL Error on select from push token",
+                    error: err
+                })
+            })
 })
 
 /**
@@ -371,12 +407,17 @@ router.put("/", (request, response, next) => {
  */ 
 router.delete("/:contact", (request, response, next) => {
     if (isStringProvided(request.params.contact)) {
-        const theQuery = "(SELECT Memberid FROM Members WHERE Email=$1) " +
-            "UNION (SELECT Memberid FROM Members WHERE Email=$2)"
+        const theQuery = "(SELECT Memberid, 1 sortby FROM Members WHERE Email=$1) " +
+            "UNION (SELECT Memberid, 2 sortby FROM Members WHERE Email=$2) ORDER BY sortby"
         const values = [request.decoded.email, request.params.contact]
 
         pool.query(theQuery, values)
             .then(result => {
+                if (request.decoded.email == request.params.contact) {
+                    result.rows[1] = result.rows[0]
+                }
+                console.log('excuse me')
+                console.log(result.rows)
                 if (typeof result.rows[1] !== 'undefined') {
                     response.locals.user = result.rows[0].memberid
                     response.locals.contact = result.rows[1].memberid
@@ -443,12 +484,16 @@ router.delete("/:contact", (request, response, next) => {
         .then(result => {
             console.log(request.decoded.email)
             console.log(request.body.message)
+            console.log(response.message)
             result.rows.forEach(entry => 
                 msg_functions.sendContactToIndividual(
                     entry.token,
                     response.message))
             response.send({
-                success:true
+                success:true,
+                rows:response.locals.rows,
+                user:response.locals.user,
+                contact:response.locals.contact
             })
         }).catch(err => {
 

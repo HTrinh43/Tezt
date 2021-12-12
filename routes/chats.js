@@ -64,7 +64,6 @@ router.post("/", (request, response, next) => {
     pool.query(theQuery, values)
         .then(result => {
             response.locals.chatid = result.rows[0].chatid
-            response.locals.name = result.rows[0].name
             next()
             // response.send({
             //     success: true,
@@ -83,7 +82,7 @@ router.post("/", (request, response, next) => {
     const values = [response.locals.chatid, response.locals.user]
     pool.query(theQuery, values)
         .then(result => {
-            response.message = result.rows
+            response.message = result.rows[0]
             console.log(response.message)
             next()
             // response.send({
@@ -106,7 +105,6 @@ router.post("/", (request, response, next) => {
         pool.query(theQuery, values)
             .then(result => {
                 console.log(request.decoded.email)
-                console.log(entry.token)
                 console.log(response.message)
                 result.rows.forEach(entry => 
                     msg_functions.sendChatToIndividual(
@@ -114,8 +112,7 @@ router.post("/", (request, response, next) => {
                         response.message))
                 response.send({
                     success:true,
-                    chatID:response.locals.chatid,
-                    name:response.locals.name
+                    chatID:response.locals.chatid
                 })
             }).catch(err => {
 
@@ -439,6 +436,7 @@ router.delete("/:chatId/:email", (request, response, next) => {
                 })
             } else {
                 request.params.memberid = result.rows[0].memberid
+                console.log(request.params.memberid)
                 next()
             }
         }).catch(error => {
@@ -499,7 +497,7 @@ router.delete("/:chatId/:email", (request, response, next) => {
                 console.log(request.decoded.email)
                 console.log(request.params.chatId)
                 console.log(request.params.email)
-                response.message = "The user," + request.params.email + "has been removed from the chat." 
+                response.message = "The user, " + request.params.email + " has been removed from the chat." 
                 console.log(response.message)
 
                 result.rows.forEach(entry => 
@@ -508,8 +506,8 @@ router.delete("/:chatId/:email", (request, response, next) => {
                         response.message))
                 response.send({
                     success:true,
-                    chatID:response.params.chatId,
-                    email:request.params.email,
+                    chatID:request.params.chatId,
+                    receiver:request.params.email,
                     memberid:request.params.memberid
                 })
             }).catch(err => {

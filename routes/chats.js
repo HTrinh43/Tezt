@@ -106,6 +106,8 @@ router.post("/", (request, response, next) => {
         pool.query(theQuery, values)
             .then(result => {
                 console.log(request.decoded.email)
+                console.log(entry.token)
+                console.log(response.message)
                 result.rows.forEach(entry => 
                     msg_functions.sendChatToIndividual(
                         entry.token, 
@@ -273,13 +275,15 @@ router.put("/:chatId/:email", (request, response, next) => {
         pool.query(theQuery, values)
             .then(result => {
                 console.log(request.decoded.email)
+                console.log(response.message)
                 result.rows.forEach(entry => 
                     msg_functions.sendChatToIndividual(
                         entry.token, 
                         response.message))
                 response.send({
                     success:true,
-                    rows: response.locals.rows
+                    rows: response.locals.rows,
+                    message: response.message
                 })
             }).catch(err => {
 
@@ -353,6 +357,7 @@ router.get("/:chatId", (request, response, next) => {
         let values = [request.params.chatId]
         pool.query(query, values)
             .then(result => {
+                console.log(result.rows)
                 response.send({
                     rowCount : result.rowCount,
                     rows: result.rows
@@ -433,7 +438,7 @@ router.delete("/:chatId/:email", (request, response, next) => {
                     message: "email not found"
                 })
             } else {
-                request.params.email = result.rows[0].memberid
+                request.params.memberid = result.rows[0].memberid
                 next()
             }
         }).catch(error => {
@@ -445,7 +450,7 @@ router.delete("/:chatId/:email", (request, response, next) => {
 }, (request, response, next) => {
         //validate email exists in the chat
         let query = 'SELECT * FROM ChatMembers WHERE ChatId=$1 AND MemberId=$2'
-        let values = [request.params.chatId, request.params.email]
+        let values = [request.params.chatId, request.params.memberid]
     
         pool.query(query, values)
             .then(result => {
@@ -469,7 +474,7 @@ router.delete("/:chatId/:email", (request, response, next) => {
                   WHERE ChatId=$1
                   AND MemberId=$2
                   RETURNING *`
-    let values = [request.params.chatId, request.params.email]
+    let values = [request.params.chatId, request.params.memberid]
     pool.query(insert, values)
         .then(result => {
             next()
@@ -492,7 +497,11 @@ router.delete("/:chatId/:email", (request, response, next) => {
         pool.query(theQuery, values)
             .then(result => {
                 console.log(request.decoded.email)
+                console.log(request.params.chatId)
+                console.log(request.params.email)
                 response.message = "The user," + request.params.email + "has been removed from the chat." 
+                console.log(response.message)
+
                 result.rows.forEach(entry => 
                     msg_functions.sendChatToIndividual(
                         entry.token, 
@@ -500,10 +509,11 @@ router.delete("/:chatId/:email", (request, response, next) => {
                 response.send({
                     success:true,
                     chatID:response.params.chatId,
-                    deleted:request.params.email
+                    email:request.params.email,
+                    memberid:request.params.memberid
                 })
             }).catch(err => {
-
+                console.log(err)
                 response.status(400).send({
                     message: "SQL Error on select from push token",
                     error: err

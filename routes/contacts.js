@@ -479,11 +479,9 @@ router.delete("/:contact", (request, response, next) => {
 }, (request, response) => {
     // send a notification of this message to ALL members with registered tokens
     let query = `SELECT token FROM Push_Token
-    INNER JOIN Contacts ON
-    Push_Token.memberid=Contacts.memberid_b
-    WHERE Contacts.memberid_b=$1
-    OR Contacts.memberid_a=$1`
-let values = [response.locals.contact]
+                    WHERE Push_Token.memberid=$1
+                    OR Push_Token.memberid=$2`
+    let values = [response.locals.contact, response.locals.user]
     pool.query(query, values)
         .then(result => {
             console.log(request.decoded.email)

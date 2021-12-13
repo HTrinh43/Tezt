@@ -75,7 +75,7 @@ let isStringProvided = validation.isStringProvided
     //perform the Select
 
     //let query = `SELECT * FROM Chatmembers WHERE Memberid=$1`
-    let query = `SELECT Members.Email, Members.username, ChatMembers.ChatId, Members.memberid
+    let query = `SELECT Members.Email, Members.username, ChatMembers.ChatId
                     FROM ChatMembers
                     INNER JOIN Members ON ChatMembers.MemberId=Members.MemberId
                     WHERE ChatMembers.ChatId IN (SELECT ChatId FROM 

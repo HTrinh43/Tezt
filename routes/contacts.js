@@ -128,7 +128,7 @@ router.post("/", (request, response, next) => {
                     response.message))
             response.send({
                 success:true,
-                message:respsonse.message
+                message:response.message
             })
         }).catch(err => {
 
@@ -456,6 +456,8 @@ router.delete("/:contact", (request, response, next) => {
             if (result.rowCount >= 1) {
                 response.message = "Deleted Contact: " + response.locals.contact + " from user " + response.locals.user
                 response.locals.rows = result.rows[0]
+                console.log(response.message)
+                console.log(response.locals.rows)
                 next()
                 // response.send({
                 //     success: true,
@@ -477,11 +479,11 @@ router.delete("/:contact", (request, response, next) => {
 }, (request, response) => {
     // send a notification of this message to ALL members with registered tokens
     let query = `SELECT token FROM Push_Token
-                    INNER JOIN Contacts ON
-                    Push_Token.memberid=Contacts.memberid_b
-                    WHERE Contacts.memberid_b=$1
-                    OR Contacts.memberid_a=$1`
-    let values = [response.locals.contact]
+    INNER JOIN Contacts ON
+    Push_Token.memberid=Contacts.memberid_b
+    WHERE Contacts.memberid_b=$1
+    OR Contacts.memberid_a=$1`
+let values = [response.locals.contact]
     pool.query(query, values)
         .then(result => {
             console.log(request.decoded.email)

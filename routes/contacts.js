@@ -112,8 +112,8 @@ router.post("/", (request, response, next) => {
     let query = `SELECT token FROM Push_Token
                     INNER JOIN Contacts ON
                     Push_Token.memberid=Contacts.memberid_b
-                    WHERE Contacts.memberid_b=$1 and Contacts.memberid_a=$2`
-    let values = [response.locals.contact, request.decoded.email]
+                    WHERE (Contacts.memberid_b=$1 and Contacts.memberid_a=$2)`
+    let values = [response.locals.contact, response.locals.user]
     pool.query(query, values)
         .then(result => {
             console.log(response.message)

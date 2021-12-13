@@ -86,7 +86,7 @@ router.post("/", (request, response, next) => {
     const values = [response.locals.user, response.locals.contact]
     pool.query(theQuery, values)
         .then(result => {
-            response.message = result.rows[0]
+            response.message = result.rows
             console.log(response.message)
             next()
             // response.status(201).send({
